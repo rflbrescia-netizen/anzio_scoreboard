@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scoreboard – Anzio (1280px, Firebase)</title>
+  <style>
+    /* ===== THEME (Anzio – navy / steel / cyan) ===== */
+    :root{
+      --barW:1280px;          /* larghezza barra */
+      --navy:#0b2c5f;         /* primary deep navy */
+      --steel:#132541;        /* dark steel */
+      --ink:#091324;          /* almost black */
+      --line:#a8c4e733;       /* hairline separators */
+      --cyan:#39d5ff;         /* cyan glow */
+      --cyan-soft:#C7F2FF;    /* soft cyan */
+      --white:#f6f8fc;        /* text */
+      --muted:#a6b7d2;        /* muted text */
+      --danger:#ff5575;       /* fouls dot */
+      --lime:#78ffb3;         /* bonus dot */
+      --amber:#ffc44d;        /* possession dot */
+      --wmOpacity: .06;       /* opacità watermark */
+      /* Se vuoi usare un’immagine personalizzata come watermark, imposta qui la URL:
+         --watermark-url: url('anzio-watermark.png'); e commenta la regola SVG inline sotto */
+      --watermark-url: none;
+    }
+
+    html,body{height:100%;margin:0;background:transparent;color:var(--white);font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Ubuntu,Arial,sans-serif}
+
+    /* Barra fissata in basso dentro scena 1920×1080 (o pagina). */
+    .bar-wrap{ position:fixed; left:50%; bottom:0; transform:translateX(-50%); width:var(--barW); height:80px; pointer-events:none; }
+
+    /* ===== BAR ===== */
+    .scorebar{
+      position:relative; width:100%; height:100%;
+      border-radius:14px 14px 0 0;
+      /* base glass-metal gradient */
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 40%),
+        linear-gradient(90deg, #0d2b59, #0a2347 55%, #0d2b59);
+      box-shadow: 0 -8px 34px rgba(0,0,0,.45), inset 0 0 0 1px rgba(169,236,255,.15);
+      display:grid; grid-template-columns: 480px 1px 320px 1px 480px; align-items:center;
+      padding:8px 12px; box-sizing:border-box; column-gap:10px;
+    }
+
+    /* Watermark tono su tono: onde + ancora stilizzata (SVG inline) */
+    .scorebar::before{
+      content:""; position:absolute; inset:0; border-radius:14px 14px 0 0; pointer-events:none;
+      background:
+        /* onde leggere a sinistra */
+        radial-gradient(120% 80% at 0% 100%, rgba(255,255,255,var(--wmOpacity)) 0%, rgba(255,255,255,0) 60%),
+        /* overlay cyan molto tenue */
+        linear-gradient(90deg, rgba(57,213,255,.09), transparent 20%, transparent 80%, rgba(57,213,255,.09)),
+        /* watermark personalizzabile o SVG di un’ancora */
+        var(--watermark-url),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><g fill="%23ffffff" fill-opacity="0.06"><path d="M100 15a12 12 0 1 1 0 24 12 12 0 0 1 0-24zm-6 36h12v38h16a6 6 0 0 1 0 12h-16v16c13.5 1.5 24 12.9 24 27h-12c0-9-7.3-16-16-16s-16 7-16 16H74c0-14.1 10.5-25.5 24-27v-16H82a6 6 0 0 1 0-12h12V51z"/></g></svg>');
+      background-repeat:no-repeat;
+      background-size: auto, auto, 220px auto, 220px auto;
+      background-position: left -30px bottom -40px, center, right 14px center, right 14px center;
+      mix-blend-mode: screen;
+    }
+
+    /* Separatori verticali integrati nella griglia */
+    .sep{ width:1px; height:46px; background:linear-gradient(180deg, transparent, var(--line), transparent); opacity:.9; }
+
+    /* ===== TEAM BLOCKS ===== */
+    .team{ display:grid; grid-template-columns: 56px 1fr 80px auto; grid-template-areas:
+      "logo name score meta"; gap:10px; align-items:center; min-width:0; }
+    .team.right{ grid-template-columns: auto 80px 1fr 56px; grid-template-areas:
+      "meta score name logo"; justify-items:end; }
+
+    .logo{ grid-area:logo; width:56px; height:56px; border-radius:10px; overflow:hidden; background:#0e2752; display:grid; place-items:center; 
+      box-shadow: inset 0 0 0 1px rgba(169,236,255,.22), inset 0 0 18px rgba(57,213,255,.08); }
+    .logo img{ width:100%; height:100%; object-fit:cover; object-position:center; image-rendering:auto; }
+
+    .name{ grid-area:name; font-weight:1000; letter-spacing:.7px; text-transform:uppercase; color:var(--white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:22px; text-shadow:0 1px 0 rgba(0,0,0,.35); }
+
+    .score{ grid-area:score; font-weight:1000; font-size:42px; line-height:1; letter-spacing:.5px; display:flex; align-items:center; justify-content:center;
+      min-width:80px; height:52px; border-radius:12px;
+      background:
+        linear-gradient(180deg, rgba(169,236,255,.18), rgba(169,236,255,0) 55%),
+        rgba(255,255,255,.06);
+      color:var(--cyan-soft);
+      text-shadow: 0 0 10px rgba(57,213,255,.7), 0 1px 0 rgba(0,0,0,.6);
+      box-shadow: inset 0 0 0 1px rgba(169,236,255,.25), 0 0 0 1px rgba(0,0,0,.2);
+    }
+
+    .meta{ grid-area:meta; display:flex; align-items:center; gap:8px; color:var(--muted); font-weight:800; min-width:0; }
+    .pill{ font-size:12px; padding:6px 10px; border-radius:999px; 
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: inset 0 0 0 1px rgba(169,236,255,.2);
+      display:flex; align-items:center; gap:6px; white-space:nowrap; }
+    .label{ text-transform:uppercase; letter-spacing:.6px; }
+    .value{ font-weight:900; }
+    .dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); box-shadow:0 0 8px currentColor; flex:0 0 auto; }
+    .dot.bonus{ background:var(--lime); }
+    .dot.foul{ background:var(--danger); }
+    .dot.poss{ background:var(--amber); }
+
+    /* ===== CENTER MODULE ===== */
+    .center{ position:relative; display:grid; gap:4px; align-items:center; justify-items:center; padding:0 8px; min-width:320px; }
+    .clock{ font-weight:1000; font-size:44px; letter-spacing:1px; line-height:1; color:#eaf7ff; text-shadow: 0 0 10px rgba(57,213,255,.75), 0 1px 0 rgba(0,0,0,.6); }
+    .center-meta{ display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; gap:10px; width:100%; }
+    .chip{ display:flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; 
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: inset 0 0 0 1px rgba(169,236,255,.2); font-size:12px; color:var(--muted); justify-content:center; }
+    .chip.left{ justify-self:start; }
+    .chip.right{ justify-self:end; }
+
+    /* Mobile safeguard: se la larghezza fosse inferiore, permetti truncation senza wrap */
+    .name, .meta{ min-width:0; }
+
+  </style>
+</head>
+<body>
+  <div class="bar-wrap">
+    <article class="scorebar" id="scorebar">
+      <!-- LEFT TEAM (con meta dedicati: FALLI, BONUS, POSSESSO) -->
+      <div class="team" id="teamA">
+        <div class="logo"><img id="logoA" alt="Team A logo" /></div>
+        <div class="name" id="nameA">Anzio</div>
+        <div class="score" id="scoreA">0</div>
+        <div class="meta">
+          <div class="pill"><span class="label">Falli</span><span class="value" id="foulsA">0</span><span class="dot foul" title="Team fouls"></span></div>
+          <div class="pill" id="bonusAwrap" title="Bonus"><span class="dot bonus"></span><span class="label">Bonus</span></div>
+          <div class="pill" id="possAwrap" title="Possession"><span class="dot poss"></span><span class="label">Poss</span></div>
+        </div>
+      </div>
+
+      <div class="sep" aria-hidden="true"></div>
+
+      <!-- CENTER: Clock grande + meta distribuiti a sinistra/destra -->
+      <div class="center">
+        <div class="clock" id="gameClock">12:00</div>
+        <div class="center-meta">
+          <div class="chip left" title="Period"><span class="label">Periodo</span><strong id="period">1</strong></div>
+          <div class="chip" title="Shot Clock"><span class="label">Shot</span><strong id="shotClock">24</strong></div>
+          <div class="chip right" title="Timeouts Remaining"><span class="label">TO</span><strong id="timeouts">7</strong></div>
+        </div>
+      </div>
+
+      <div class="sep" aria-hidden="true"></div>
+
+      <!-- RIGHT TEAM -->
+      <div class="team right" id="teamB">
+        <div class="meta">
+          <div class="pill" id="possBwrap" title="Possession"><span class="dot poss"></span><span class="label">Poss</span></div>
+          <div class="pill" id="bonusBwrap" title="Bonus"><span class="dot bonus"></span><span class="label">Bonus</span></div>
+          <div class="pill"><span class="label">Falli</span><span class="value" id="foulsB">0</span><span class="dot foul" title="Team fouls"></span></div>
+        </div>
+        <div class="score" id="scoreB">0</div>
+        <div class="name" id="nameB">Ospiti</div>
+        <div class="logo"><img id="logoB" alt="Team B logo" /></div>
+      </div>
+    </article>
+  </div>
+
+
+
+  <!-- Firebase (modular v10+) -->
+  <script type="module">
+    // ⬇️ INCOLLA QUI IL TUO CONFIG DI FIREBASE (lo stesso del controller)
+    const firebaseConfig = {
+ apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
+  authDomain: "anzio-scoreboard.firebaseapp.com",
+  databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "anzio-scoreboard",
+  storageBucket: "anzio-scoreboard.firebasestorage.app",
+  messagingSenderId: "1070047467007",
+  appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
+  measurementId: "G-HJB4DC7GN7"
+    };
+    const GAME_ID = new URLSearchParams(location.search).get('game') || 'anzio-scoreboard-3d8bb';
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+    const stateRef = ref(db, `games/${GAME_ID}/state`);
+
+    const $ = sel => document.querySelector(sel);
+    const els = {
+      nameA: $('#nameA'), nameB: $('#nameB'),
+      logoA: $('#logoA'), logoB: $('#logoB'),
+      scoreA: $('#scoreA'), scoreB: $('#scoreB'),
+      foulsA: $('#foulsA'), foulsB: $('#foulsB'),
+      bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
+      possAwrap: $('#possAwrap'), possBwrap: $('#possBwrap'),
+      period: $('#period'), timeouts: $('#timeouts'),
+      gameClock: $('#gameClock'), shotClock: $('#shotClock')
+    };
+
+    const state = {
+      nameA:'Home', nameB:'Away', logoA:'', logoB:'',
+      scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false,
+      period:1, timeouts:7, gameClockMS:12*60*1000, shotClock:24, poss:null
+    };
+
+    function fmtClock(ms){
+      const neg = ms<0; const abs=Math.abs(ms);
+      const m=Math.floor(abs/60000), s=Math.floor((abs%60000)/1000);
+      const t=`${m}:${s.toString().padStart(2,'0')}`; return neg?`-${t}`:t;
+    }
+    function render(){
+      els.nameA.textContent=state.nameA; els.nameB.textContent=state.nameB;
+      els.scoreA.textContent=state.scoreA; els.scoreB.textContent=state.scoreB;
+      els.foulsA.textContent=state.foulsA; els.foulsB.textContent=state.foulsB;
+      els.period.textContent=state.period; els.timeouts.textContent=state.timeouts;
+      els.shotClock.textContent=state.shotClock;
+      els.logoA.src=state.logoA||''; els.logoB.src=state.logoB||'';
+      els.bonusAwrap.style.opacity=state.bonusA?1:.35; els.bonusBwrap.style.opacity=state.bonusB?1:.35;
+      els.possAwrap.style.opacity=state.poss==='A'?1:.3; els.possBwrap.style.opacity=state.poss==='B'?1:.3;
+      els.gameClock.textContent=fmtClock(state.gameClockMS);
+    }
+    render();
+
+    onValue(stateRef, (snap)=>{
+      const v = snap.val();
+      if(!v) return;
+      Object.assign(state, v);
+      render();
+    });
+  </script>
+</body>
+</html>
