@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Pro Scoreboard – Controller (Firebase)</title>
+  <style>
+    :root{
+      --bg:#0e1117; --panel:#141923; --accent:#5ee0ff; --accent2:#80ff9f;
+      --muted:#8a93a6; --danger:#ff5470; --white:#f5f7fb;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--white);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial,sans-serif}
+    .wrap{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:20px;max-width:1200px;margin:0 auto}
+    .card{background:var(--panel);border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
+    h2{margin:0 0 12px;font-size:14px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+    input[type="text"],input[type="number"],input[type="time"]{background:#0e1420;border:1px solid rgba(255,255,255,.1);color:var(--white);padding:10px 12px;border-radius:10px;outline:none;font-weight:600}
+    input[type="file"]{color:var(--muted)}
+    button{background:linear-gradient(135deg,#1c2433,#121826);border:1px solid rgba(255,255,255,.08);color:var(--white);padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+    button:hover{filter:brightness(1.08)} button:active{transform:translateY(1px)}
+    .btn-danger{background:linear-gradient(135deg,#3a1520,#210b12);border-color:rgba(255,84,112,.35)}
+    .btn-accent{background:linear-gradient(135deg,#12313a,#0a1e25);border-color:rgba(94,224,255,.4)}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .tiny{font-size:12px;color:var(--muted)}
+    /* Mobile */
+    @media (max-width:1024px){.wrap{grid-template-columns:1fr;max-width:880px;padding:16px}.card{padding:14px}}
+    @media (max-width:820px) and (orientation:landscape){.wrap{grid-template-columns:1fr;gap:14px;padding:14px;max-width:100%}.grid-2{grid-template-columns:1fr 1fr}}
+    @media (max-width:480px){.wrap{grid-template-columns:1fr;gap:12px;padding:12px;max-width:100%}.grid-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>Teams</h2>
+      <div class="row">
+        <input type="text" id="inNameA" placeholder="Home team name" />
+        <input type="file" id="inLogoA" accept="image/*" />
+      </div>
+      <div class="row">
+        <input type="text" id="inNameB" placeholder="Away team name" />
+        <input type="file" id="inLogoB" accept="image/*" />
+      </div>
+      <div class="row">
+        <button id="swapTeams">Swap Sides</button>
+        <button id="resetLogos">Clear Logos</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Game Clock & Shot Clock</h2>
+      <div class="row">
+        <button id="clkStart" class="btn-accent">Start</button>
+        <button id="clkStop">Stop</button>
+        <button id="clkReset">Reset 12:00</button>
+        <input type="text" id="clkSet" placeholder="Set mm:ss" style="width:120px" />
+        <button id="clkApply">Apply</button>
+      </div>
+      <div class="row">
+        <button id="shotReset">Shot 24</button>
+        <button id="shot14">Shot 14</button>
+        <input type="number" id="shotSet" min="1" max="99" value="24" style="width:80px"/>
+        <button id="shotApply">Apply</button>
+      </div>
+      <div class="tiny">Shortcuts: Space = Start/Stop · R = Shot 24 · F = Shot 14 · +/- = Shot ±1</div>
+    </div>
+
+    <div class="card">
+      <h2>Scores</h2>
+      <div class="grid-2">
+        <div><div class="row"><button data-delta="-1" data-target="A" class="btn-danger">Home -1</button><button data-delta="1" data-target="A">Home +1</button><button data-delta="2" data-target="A">+2</button><button data-delta="3" data-target="A">+3</button></div></div>
+        <div><div class="row"><button data-delta="-1" data-target="B" class="btn-danger">Away -1</button><button data-delta="1" data-target="B">Away +1</button><button data-delta="2" data-target="B">+2</button><button data-delta="3" data-target="B">+3</button></div></div>
+      </div>
+      <div class="row"><button id="resetScores" class="btn-danger">Reset Scores</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Period & Timeouts</h2>
+      <div class="row"><button id="perDec">Period -</button><span class="tiny">Current: <strong id="periodView">1</strong></span><button id="perInc">Period +</button></div>
+      <div class="row"><button id="toDec">TO -</button><span class="tiny">Current: <strong id="timeoutsView">7</strong></span><button id="toInc">TO +</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Fouls & Bonus</h2>
+      <div class="grid-2">
+        <div>
+          <div class="row"><span class="tiny">Home Fouls: <strong id="foulsAView">0</strong></span></div>
+          <div class="row"><button data-foul="A" data-delta="-1" class="btn-danger">-1</button><button data-foul="A" data-delta="1">+1</button><button id="bonusAToggle">Toggle Bonus</button></div>
+        </div>
+        <div>
+          <div class="row"><span class="tiny">Away Fouls: <strong id="foulsBView">0</strong></span></div>
+          <div class="row"><button data-foul="B" data-delta="-1" class="btn-danger">-1</button><button data-foul="B" data-delta="1">+1</button><button id="bonusBToggle">Toggle Bonus</button></div>
+        </div>
+      </div>
+      <div class="row"><button id="resetFouls" class="btn-danger">Reset Fouls</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Possession Arrow</h2>
+      <div class="row">
+        <button id="possA">Home Possession</button>
+        <button id="possB">Away Possession</button>
+        <button id="possClear" class="btn-danger">Clear</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Utilities</h2>
+      <div class="row">
+        <button id="saveState">Save State</button>
+        <button id="loadState">Load State</button>
+        <button id="resetAll" class="btn-danger">Reset All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase (modular v10+) -->
+  <script type="module">
+    // ⬇️ INCOLLA QUI IL TUO CONFIG DI FIREBASE
+    const firebaseConfig = {
+     apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
+  authDomain: "anzio-scoreboard.firebaseapp.com",
+  databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "anzio-scoreboard",
+  storageBucket: "anzio-scoreboard.firebasestorage.app",
+  messagingSenderId: "1070047467007",
+  appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
+  measurementId: "G-HJB4DC7GN7"
+    };
+    const GAME_ID = new URLSearchParams(location.search).get('game') || 'anzio-scoreboard-3d8bb';
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, update, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+    const gameRef = ref(db, `games/${GAME_ID}`);
+    const stateRef = ref(db, `games/${GAME_ID}/state`);
+    const metaRef  = ref(db, `games/${GAME_ID}/meta`);
+
+    // ---- CONTROLLER LOGIC (uguale alla tua, + sync Firebase) ----
+    const $ = sel => document.querySelector(sel);
+    const chan = null; // (non usiamo più BroadcastChannel)
+
+    const state = {
+      nameA:'Home', nameB:'Away', logoA:'', logoB:'',
+      scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false,
+      period:1, timeouts:7, gameClockMS:12*60*1000, gameRunning:false, shotClock:24, poss:null
+    };
+
+    const c = {
+      inNameA: $('#inNameA'), inNameB: $('#inNameB'), inLogoA: $('#inLogoA'), inLogoB: $('#inLogoB'),
+      swapTeams: $('#swapTeams'), resetLogos: $('#resetLogos'),
+      clkStart: $('#clkStart'), clkStop: $('#clkStop'), clkReset: $('#clkReset'), clkSet: $('#clkSet'), clkApply: $('#clkApply'),
+      shotReset: $('#shotReset'), shot14: $('#shot14'), shotSet: $('#shotSet'), shotApply: $('#shotApply'),
+      perDec: $('#perDec'), perInc: $('#perInc'), toDec: $('#toDec'), toInc: $('#toInc'),
+      periodView: $('#periodView'), timeoutsView: $('#timeoutsView'),
+      resetScores: $('#resetScores'), resetFouls: $('#resetFouls'),
+      bonusAToggle: $('#bonusAToggle'), bonusBToggle: $('#bonusBToggle'),
+      foulsAView: $('#foulsAView'), foulsBView: $('#foulsBView'),
+      possA: $('#possA'), possB: $('#possB'), possClear: $('#possClear'),
+      saveState: $('#saveState'), loadState: $('#loadState'), resetAll: $('#resetAll')
+    };
+
+    function renderToViews(){
+      c.inNameA.value = state.nameA; c.inNameB.value = state.nameB;
+      c.periodView.textContent = state.period; c.timeoutsView.textContent = state.timeouts;
+      c.shotSet.value = state.shotClock;
+      c.foulsAView.textContent = state.foulsA; c.foulsBView.textContent = state.foulsB;
+    }
+
+    // --- Sync helpers ---
+    let dirty = true;
+    const pushNow = () => {
+      update(stateRef, {...state}).then(()=>{
+        update(metaRef, {updatedAt: serverTimestamp()});
+      });
+      dirty = false;
+    };
+    // Throttle writes: max 5/sec quando il clock gira
+    setInterval(()=>{ if(dirty) pushNow(); }, 200);
+
+    function markDirty(){ dirty = true; }
+
+    // Timers – controller drives the clocks
+    let lastTick = 0; let rafId = null; const SHOT_INTERVAL = 1000; let lastShotTick = 0;
+    function tick(ts){
+      if(!lastTick) lastTick = ts; if(!lastShotTick) lastShotTick = ts;
+      const dt = ts - lastTick; lastTick = ts;
+      if(state.gameRunning){
+        state.gameClockMS = Math.max(0, state.gameClockMS - dt);
+        if(ts - lastShotTick >= SHOT_INTERVAL){
+          state.shotClock = Math.max(0, state.shotClock - 1);
+          lastShotTick = ts;
+        }
+        markDirty();
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+
+    // Inputs (uguali, ma chiamano markDirty/broadcast su Firebase)
+    function handleLogo(file, key){ if(!file) return; const r=new FileReader(); r.onload=()=>{ state[key]=r.result; markDirty(); }; r.readAsDataURL(file); }
+    c.inNameA.addEventListener('input', e=>{ state.nameA = e.target.value || 'Home'; markDirty(); });
+    c.inNameB.addEventListener('input', e=>{ state.nameB = e.target.value || 'Away'; markDirty(); });
+    c.inLogoA.addEventListener('change', e=>handleLogo(e.target.files[0], 'logoA'));
+    c.inLogoB.addEventListener('change', e=>handleLogo(e.target.files[0], 'logoB'));
+
+    c.swapTeams.addEventListener('click', ()=>{
+      [state.nameA, state.nameB] = [state.nameB, state.nameA];
+      [state.logoA, state.logoB] = [state.logoB, state.logoA];
+      [state.scoreA, state.scoreB] = [state.scoreB, state.scoreA];
+      [state.foulsA, state.foulsB] = [state.foulsB, state.foulsA];
+      state.poss = state.poss==='A'?'B': state.poss==='B'?'A': null;
+      renderToViews(); markDirty();
+    });
+    c.resetLogos.addEventListener('click', ()=>{ state.logoA=''; state.logoB=''; markDirty(); });
+
+    // Clock controls
+    c.clkStart.addEventListener('click', ()=>{ state.gameRunning=true; lastTick=0; lastShotTick=0; markDirty(); });
+    c.clkStop.addEventListener('click', ()=>{ state.gameRunning=false; markDirty(); });
+    c.clkReset.addEventListener('click', ()=>{ state.gameClockMS=12*60*1000; state.shotClock=24; state.gameRunning=false; renderToViews(); markDirty(); });
+    c.clkApply.addEventListener('click', ()=>{ const m=/^([0-9]{1,2}):([0-5][0-9])$/.exec(c.clkSet.value.trim()); if(m){ state.gameClockMS=(parseInt(m[1])*60+parseInt(m[2]))*1000; markDirty(); }});
+
+    // Shot clock
+    c.shotReset.addEventListener('click', ()=>{ state.shotClock=24; renderToViews(); markDirty(); });
+    c.shot14.addEventListener('click', ()=>{ state.shotClock=14; renderToViews(); markDirty(); });
+    c.shotApply.addEventListener('click', ()=>{ const v=Math.max(1, Math.min(99, parseInt(c.shotSet.value||24))); state.shotClock=v; renderToViews(); markDirty(); });
+
+    // Scores & Fouls
+    document.addEventListener('click', e=>{
+      const sb = e.target.closest('button[data-delta]');
+      if(sb){ const d=parseInt(sb.dataset.delta); const t=sb.dataset.target; const key=t==='A'?'scoreA':'scoreB'; state[key]=Math.max(0, state[key]+d); markDirty(); }
+      const fb = e.target.closest('button[data-foul]');
+      if(fb){ const team=fb.dataset.foul; const d=parseInt(fb.dataset.delta); const key=team==='A'?'foulsA':'foulsB'; state[key]=Math.max(0, state[key]+d); renderToViews(); markDirty(); }
+    });
+    c.resetScores?.addEventListener('click', ()=>{ state.scoreA=0; state.scoreB=0; markDirty(); });
+    c.resetFouls.addEventListener('click', ()=>{ state.foulsA=0; state.foulsB=0; state.bonusA=false; state.bonusB=false; renderToViews(); markDirty(); });
+
+    // Period & TO
+    c.perDec.addEventListener('click', ()=>{ state.period=Math.max(1, state.period-1); renderToViews(); markDirty(); });
+    c.perInc.addEventListener('click', ()=>{ state.period=Math.min(9, state.period+1); renderToViews(); markDirty(); });
+    c.toDec.addEventListener('click', ()=>{ state.timeouts=Math.max(0, state.timeouts-1); renderToViews(); markDirty(); });
+    c.toInc.addEventListener('click', ()=>{ state.timeouts=Math.min(10, state.timeouts+1); renderToViews(); markDirty(); });
+
+    // Bonus & Possession
+    c.bonusAToggle.addEventListener('click', ()=>{ state.bonusA=!state.bonusA; markDirty(); });
+    c.bonusBToggle.addEventListener('click', ()=>{ state.bonusB=!state.bonusB; markDirty(); });
+    c.possA.addEventListener('click', ()=>{ state.poss='A'; markDirty(); });
+    c.possB.addEventListener('click', ()=>{ state.poss='B'; markDirty(); });
+    c.possClear.addEventListener('click', ()=>{ state.poss=null; markDirty(); });
+
+    // Save/Load (locale) – opzionale
+    c.saveState.addEventListener('click', ()=>{ localStorage.setItem('pro-scoreboard', JSON.stringify(state)); alert('Saved.'); });
+    c.loadState.addEventListener('click', ()=>{ try{ const s=JSON.parse(localStorage.getItem('pro-scoreboard')||'{}'); Object.assign(state,s); renderToViews(); markDirty(); }catch(e){} });
+    c.resetAll.addEventListener('click', ()=>{
+      Object.assign(state, { nameA:'Home', nameB:'Away', logoA:'', logoB:'', scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false, period:1, timeouts:7, gameClockMS:12*60*1000, gameRunning:false, shotClock:24, poss:null });
+      renderToViews(); markDirty();
+    });
+
+    // On open: set presence meta
+    onDisconnect(metaRef).update?.({controllerOnline:false});
+    update(metaRef, {controllerOnline:true, updatedAt: serverTimestamp(), gameId: GAME_ID});
+    renderToViews();
+    // push initial state
+    pushNow();
+  </script>
+</body>
+</html>
