@@ -133,6 +133,7 @@ import { getAnalytics } from "firebase/analytics";
   appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
   measurementId: "G-HJB4DC7GN7"
     };
+    const GAME_ID = new URLSearchParams(location.search).get('game') || 'anzio-scoreboard-3d8bb';
     // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
