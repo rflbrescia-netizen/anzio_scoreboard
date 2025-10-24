@@ -307,8 +307,7 @@ import { getAnalytics } from "firebase/analytics";
   measurementId: "G-HJB4DC7GN7"
     };
     // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
     const GAME_ID = new URLSearchParams(location.search).get('game') || 'anzio-scoreboard-3d8bb';
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
