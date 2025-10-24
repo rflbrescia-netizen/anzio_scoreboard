@@ -251,10 +251,10 @@ letter-spacing: 0.4px;
       <div class="name" id="nameA">Anzio</div>
       <div class="score" id="scoreA">0</div>
       <div class="meta">
-        <div class="pill"><span class="label">Falli</span><span id="foulsA">0</span><span class="dot foul"></span></div>
-        <div class="pill"><span class="label">Bonus</span><span class="dot bonus"></span></div>
-        <div class="pill"><span class="label">Poss</span><span class="dot poss"></span></div>
-      </div>
+  <div class="pill"><span class="label">Falli</span><span id="foulsA">0</span><span class="dot foul"></span></div>
+  <div class="pill" id="bonusAwrap"><span class="label">Bonus</span><span class="dot bonus"></span></div>
+  <div class="pill" id="possAwrap"><span class="label">Poss</span><span class="dot poss"></span></div>
+</div>
     </div>
 
     <div class="sep"></div>
@@ -275,10 +275,10 @@ letter-spacing: 0.4px;
     <!-- Team B -->
     <div class="team right">
       <div class="meta">
-        <div class="pill"><span class="label">Poss</span><span class="dot poss"></span></div>
-        <div class="pill"><span class="label">Bonus</span><span class="dot bonus"></span></div>
-        <div class="pill"><span class="label">Falli</span><span id="foulsB">0</span><span class="dot foul"></span></div>
-      </div>
+  <div class="pill" id="possBwrap"><span class="label">Poss</span><span class="dot poss"></span></div>
+  <div class="pill" id="bonusBwrap"><span class="label">Bonus</span><span class="dot bonus"></span></div>
+  <div class="pill"><span class="label">Falli</span><span id="foulsB">0</span><span class="dot foul"></span></div>
+</div>
       <div class="score" id="scoreB">0</div>
       <div class="name" id="nameB">Ospiti</div>
       <div class="logo"><img src="" id="logoB"></div>
@@ -291,72 +291,73 @@ letter-spacing: 0.4px;
 
 
   <!-- Firebase (modular v10+) -->
-  <script type="module">
-     
-    // ⬇️ INCOLLA QUI IL TUO CONFIG DI FIREBASE (lo stesso del controller)
-    const firebaseConfig = {
- apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
-  authDomain: "anzio-scoreboard.firebaseapp.com",
-  databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "anzio-scoreboard",
-  storageBucket: "anzio-scoreboard.firebasestorage.app",
-  messagingSenderId: "1070047467007",
-  appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
-  measurementId: "G-HJB4DC7GN7"
-    };
-    // Initialize Firebase
+ <script type="module">
+  // Config (uguale al controller)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
+    authDomain: "anzio-scoreboard.firebaseapp.com",
+    databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "anzio-scoreboard",
+    storageBucket: "anzio-scoreboard.firebasestorage.app",
+    messagingSenderId: "1070047467007",
+    appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
+    measurementId: "G-HJB4DC7GN7"
+  };
 
-    const GAME_ID = new URLSearchParams(location.search).get('game') || 'anzio-scoreboard-3d8bb';
+  const GAME_ID = new URLSearchParams(location.search).get('game') || 'anzio-scoreboard-3d8bb';
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
-    const stateRef = ref(db, `games/${GAME_ID}/state`);
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+  const stateRef = ref(db, `games/${GAME_ID}/state`);
 
-    const $ = sel => document.querySelector(sel);
-    const els = {
-      nameA: $('#nameA'), nameB: $('#nameB'),
-      logoA: $('#logoA'), logoB: $('#logoB'),
-      scoreA: $('#scoreA'), scoreB: $('#scoreB'),
-      foulsA: $('#foulsA'), foulsB: $('#foulsB'),
-      bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
-      possAwrap: $('#possAwrap'), possBwrap: $('#possBwrap'),
-      period: $('#period'), timeouts: $('#timeouts'),
-      gameClock: $('#gameClock'), shotClock: $('#shotClock')
-    };
+  const $ = sel => document.querySelector(sel);
+  const els = {
+    nameA: $('#nameA'), nameB: $('#nameB'),
+    logoA: $('#logoA'), logoB: $('#logoB'),
+    scoreA: $('#scoreA'), scoreB: $('#scoreB'),
+    foulsA: $('#foulsA'), foulsB: $('#foulsB'),
+    bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
+    possAwrap: $('#possAwrap'), possBwrap: $('#possBwrap'),
+    period: $('#period'), timeouts: $('#timeouts'),
+    gameClock: $('#gameClock'), shotClock: $('#shotClock')
+  };
 
-    const state = {
-      nameA:'Home', nameB:'Away', logoA:'', logoB:'',
-      scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false,
-      period:1, timeouts:7, gameClockMS:12*60*1000, shotClock:24, poss:null
-    };
+  const state = {
+    nameA:'Home', nameB:'Away', logoA:'', logoB:'',
+    scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false,
+    period:1, timeouts:7, gameClockMS:12*60*1000, shotClock:24, poss:null
+  };
 
-    function fmtClock(ms){
-      const neg = ms<0; const abs=Math.abs(ms);
-      const m=Math.floor(abs/60000), s=Math.floor((abs%60000)/1000);
-      const t=`${m}:${s.toString().padStart(2,'0')}`; return neg?`-${t}`:t;
-    }
-    function render(){
-      els.nameA.textContent=state.nameA; els.nameB.textContent=state.nameB;
-      els.scoreA.textContent=state.scoreA; els.scoreB.textContent=state.scoreB;
-      els.foulsA.textContent=state.foulsA; els.foulsB.textContent=state.foulsB;
-      els.period.textContent=state.period; els.timeouts.textContent=state.timeouts;
-      els.shotClock.textContent=state.shotClock;
-      els.logoA.src=state.logoA||''; els.logoB.src=state.logoB||'';
-      els.bonusAwrap.style.opacity=state.bonusA?1:.35; els.bonusBwrap.style.opacity=state.bonusB?1:.35;
-      els.possAwrap.style.opacity=state.poss==='A'?1:.3; els.possBwrap.style.opacity=state.poss==='B'?1:.3;
-      els.gameClock.textContent=fmtClock(state.gameClockMS);
-    }
+  function fmtClock(ms){
+    const neg = ms<0; const abs=Math.abs(ms);
+    const m=Math.floor(abs/60000), s=Math.floor((abs%60000)/1000);
+    const t=`${m}:${s.toString().padStart(2,'0')}`; return neg?`-${t}`:t;
+  }
+
+  function render(){
+    els.nameA.textContent=state.nameA; els.nameB.textContent=state.nameB;
+    els.scoreA.textContent=state.scoreA; els.scoreB.textContent=state.scoreB;
+    els.foulsA.textContent=state.foulsA; els.foulsB.textContent=state.foulsB;
+    els.period.textContent=state.period; els.timeouts.textContent=state.timeouts;
+    els.shotClock.textContent=state.shotClock;
+    els.logoA.src=state.logoA||''; els.logoB.src=state.logoB||'';
+    if(els.bonusAwrap) els.bonusAwrap.style.opacity=state.bonusA?1:.35;
+    if(els.bonusBwrap) els.bonusBwrap.style.opacity=state.bonusB?1:.35;
+    if(els.possAwrap)  els.possAwrap.style.opacity = state.poss==='A'?1:.3;
+    if(els.possBwrap)  els.possBwrap.style.opacity = state.poss==='B'?1:.3;
+    els.gameClock.textContent=fmtClock(state.gameClockMS);
+  }
+  render();
+
+  onValue(stateRef, (snap)=>{
+    const v = snap.val();
+    if(!v) return;
+    Object.assign(state, v);
     render();
-
-    onValue(stateRef, (snap)=>{
-      const v = snap.val();
-      if(!v) return;
-      Object.assign(state, v);
-      render();
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
