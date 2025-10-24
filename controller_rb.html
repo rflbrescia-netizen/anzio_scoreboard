@@ -229,12 +229,29 @@
     c.shotApply.addEventListener('click', ()=>{ const v=Math.max(1, Math.min(99, parseInt(c.shotSet.value||24))); state.shotClock=v; renderToViews(); markDirty(); });
 
     // Scores & Fouls
-    document.addEventListener('click', e=>{
-      const sb = e.target.closest('button[data-delta]');
-      if(sb){ const d=parseInt(sb.dataset.delta); const t=sb.dataset.target; const key=t==='A'?'scoreA':'scoreB'; state[key]=Math.max(0, state[key]+d); markDirty(); }
-      const fb = e.target.closest('button[data-foul]');
-      if(fb){ const team=fb.dataset.foul; const d=parseInt(fb.dataset.delta); const key=team==='A'?'foulsA':'foulsB'; state[key]=Math.max(0, state[key]+d); renderToViews(); markDirty(); }
-    });
+   document.addEventListener('click', e=>{
+  // 1) FALLI: gestiscili per primi
+  const fb = e.target.closest('button[data-foul]');
+  if (fb){
+    const team = fb.dataset.foul;
+    const d = parseInt(fb.dataset.delta);
+    const key = team === 'A' ? 'foulsA' : 'foulsB';
+    state[key] = Math.max(0, state[key] + d);
+    renderToViews();
+    markDirty();
+    return; // evita di cadere nella logica degli score
+  }
+
+  // 2) SCORE: solo bottoni che hanno SIA data-delta SIA data-target
+  const sb = e.target.closest('button[data-delta][data-target]');
+  if (sb){
+    const d = parseInt(sb.dataset.delta);
+    const t = sb.dataset.target;           // 'A' o 'B'
+    const key = t === 'A' ? 'scoreA' : 'scoreB';
+    state[key] = Math.max(0, state[key] + d);
+    markDirty();
+  }
+});
     c.resetScores?.addEventListener('click', ()=>{ state.scoreA=0; state.scoreB=0; markDirty(); });
     c.resetFouls.addEventListener('click', ()=>{ state.foulsA=0; state.foulsB=0; state.bonusA=false; state.bonusB=false; renderToViews(); markDirty(); });
 
