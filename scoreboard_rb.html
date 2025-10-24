@@ -36,36 +36,37 @@
 }
 
   /* ===== Scorebar ===== */
-  .scorebar{
+ .scorebar{
   position:relative;
   width:100%;
   height:100%;
   border-radius:14px 14px 0 0;
   display:grid;
   grid-template-columns: 460px 1px 340px 1px 460px;
-  align-items:center;           /* ← mantiene i blocchi centrati */
+  align-items:center;
   justify-items:center;
-  padding:10px 20px 8px 20px;   /* ← padding uniforme sopra/sotto */
+  padding:10px 20px 8px 20px;
   box-sizing:border-box;
   background: rgba(10, 25, 45, 0.85);
   backdrop-filter: blur(6px);
   overflow:hidden;
+}
 
-  /* === Background Image === */
-  .scorebar::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background: url('https://rflbrescia-netizen.github.io/anzio_scoreboard/background.png') center/cover no-repeat;
-    opacity:0.40;
-    z-index:0;
-  }
+.scorebar::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: url('https://rflbrescia-netizen.github.io/anzio_scoreboard/background.png') center/cover no-repeat;
+  opacity:0.40;
+  z-index:0;
+}
+
 .scorebar,
 .team,
 .center {
-  align-items: center;        /* già presente, lo ribadiamo */
+  align-items: center;
 }
-/* Tutti i testi in maiuscolo */
+
 .scorebar,
 .scorebar * {
   text-transform: uppercase;
@@ -77,20 +78,22 @@
 .chip,
 .brand,
 .clock {
-  line-height: 1;             /* evita spazio extra sopra/sotto */
+  line-height: 1;
 }
+
 .team,
 .team.right {
   align-items: center;
 }
+
 .scorebar * {
   margin-top: 0;
   margin-bottom: 0;
 }
-/* Etichette principali (FALLI / BONUS / POSS) più grandi e visibili */
+
 .pill {
-  font-size: 15px;               /* ↑ dimensione da 12 → 15px */
-  font-weight: 900;              /* più bold */
+  font-size: 15px;
+  font-weight: 900;
   letter-spacing: 0.5px;
   padding: 6px 10px;
   border-radius: 10px;
@@ -289,12 +292,7 @@ letter-spacing: 0.4px;
 
   <!-- Firebase (modular v10+) -->
   <script type="module">
-  // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-    
+     
     // ⬇️ INCOLLA QUI IL TUO CONFIG DI FIREBASE (lo stesso del controller)
     const firebaseConfig = {
  apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
