@@ -34,7 +34,19 @@
   pointer-events:none;
   z-index:100;
 }
-
+.corner-logo {
+  position: fixed;
+  top: 14px;          /* distanza dal bordo superiore */
+  right: 18px;        /* distanza dal bordo destro */
+  width: 90px;        /* dimensione del logo */
+  height: auto;
+  z-index: 200;       /* sopra lo scoreboard */
+  opacity: 0.95;      /* leggermente trasparente */
+  transition: opacity 0.2s ease;
+}
+.corner-logo:hover {
+  opacity: 1;         /* effetto al passaggio del mouse */
+}
   /* ===== Scorebar ===== */
  .scorebar{
   position:relative;
@@ -245,7 +257,10 @@ letter-spacing: 0.4px;
 </style>
 </head>
 <body>
-
+<!-- Logo in alto a destra -->
+<img src="https://rflbrescia-netizen.github.io/anzio_scoreboard/logo.png" 
+     alt="Anzio Basket Logo" 
+     class="corner-logo">
 <div class="bar-wrap">
   <article class="scorebar">
     <!-- Team A -->
