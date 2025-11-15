@@ -238,6 +238,27 @@ button:active{ transform:translateY(1px); }
   align-items:center;
 }
 
+  /* --- Layout affiancato Clock + Scores --- */
+.top-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  align-items:flex-start;
+}
+
+/* Su schermi piccoli tornano uno sotto l'altro */
+@media (max-width:1024px){
+  .top-row{
+    grid-template-columns:1fr;
+  }
+}
+
+/* Score verticali (Home sopra, Away sotto) */
+.score-vert{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
 .score-team .btn-row{
   display:flex;
   gap:8px;
@@ -322,106 +343,114 @@ button:active{ transform:translateY(1px); }
 <!--                       CLOCK & SHOT CLOCK                  -->
 <!-- ========================================================= -->
 
-<div class="card clock-card">
-  <h2>Game Clock & Shot Clock</h2>
-
-  <div class="clock-block">
-
-    <!-- LEFT SIDE -->
-    <div style="display:flex; flex-direction:column; gap:10px;">
-
-      <div class="row">
-        <button id="clkStart" class="btn-accent">Start</button>
-        <button id="clkStop">Stop</button>
-      </div>
-
-      <div class="row">
-        <input type="text" id="clkSet" placeholder="mm:ss" style="width:120px" />
-        <button id="clkApply">Apply</button>
-      </div>
-
-      <div class="row">
-        <select id="clkPreset">
-          <option value="720000">12:00</option>
-          <option value="600000">10:00</option>
-          <option value="480000">08:00</option>
-          <option value="360000">06:00</option>
-        </select>
-        <button id="clkPresetApply">Reset</button>
-      </div>
-
-      <div class="row">
-        <button id="shotReset">Shot 24</button>
-        <button id="shotDisable" class="btn-danger">Shot OFF</button>
-      </div>
-
-      <div class="row">
-        <input type="number" id="shotSet" min="1" max="99" value="24" style="width:80px" />
-        <button id="shotApply">Apply</button>
-      </div>
-
-    </div>
-
-    <!-- NUMPAD ON THE RIGHT -->
-    <div id="numpad">
-      <button data-num="1">1</button>
-      <button data-num="2">2</button>
-      <button data-num="3">3</button>
-      <button data-num="4">4</button>
-      <button data-num="5">5</button>
-      <button data-num="6">6</button>
-      <button data-num="7">7</button>
-      <button data-num="8">8</button>
-      <button data-num="9">9</button>
-      <button style="visibility:hidden;"></button>
-      <button data-num="0">0</button>
-      <button id="numpadClear" class="btn-danger">C</button>
-    </div>
-
-  </div>
-
-  <div class="tiny">
-    Shortcuts: Space = Start/Stop · R = Shot 24 · F = Shot - disabled · +/- = Shot ±1
-  </div>
-</div>
-
-
-
-
 <!-- ========================================================= -->
-<!--                           SCORES                          -->
+<!--        RIGA SUPERIORE: CLOCK & SHOT  +  SCORES            -->
 <!-- ========================================================= -->
 
-<div class="card">
-  <h2>Scores</h2>
+<div class="top-row">
 
-  <div class="score-box">
+  <!-- COLONNA SINISTRA: GAME CLOCK & SHOT CLOCK -->
+  <div class="card clock-card">
+    <h2>Game Clock & Shot Clock</h2>
 
-    <!-- HOME -->
-    <div class="score-team">
-      <div><strong>Home</strong></div>
+    <div class="clock-block">
 
-      <div class="btn-row">
-        <button data-delta="-1" data-target="A" class="btn-danger">-1</button>
-        <button data-delta="1"  data-target="A">+1</button>
-        <button data-delta="2"  data-target="A">+2</button>
-        <button data-delta="3"  data-target="A">+3</button>
+      <!-- LEFT SIDE -->
+      <div style="display:flex; flex-direction:column; gap:10px;">
+
+        <div class="row">
+          <button id="clkStart" class="btn-accent">Start</button>
+          <button id="clkStop">Stop</button>
+        </div>
+
+        <div class="row">
+          <input type="text" id="clkSet" placeholder="mm:ss" style="width:120px" />
+          <button id="clkApply">Apply</button>
+        </div>
+
+        <div class="row">
+          <select id="clkPreset">
+            <option value="720000">12:00</option>
+            <option value="600000">10:00</option>
+            <option value="480000">08:00</option>
+            <option value="360000">06:00</option>
+          </select>
+          <button id="clkPresetApply">Reset</button>
+        </div>
+
+        <div class="row">
+          <button id="shotReset">Shot 24</button>
+          <button id="shotDisable" class="btn-danger">Shot OFF</button>
+        </div>
+
+        <div class="row">
+          <input type="number" id="shotSet" min="1" max="99" value="24" style="width:80px" />
+          <button id="shotApply">Apply</button>
+        </div>
+
       </div>
+
+      <!-- NUMPAD A DESTRA -->
+      <div id="numpad">
+        <button data-num="1">1</button>
+        <button data-num="2">2</button>
+        <button data-num="3">3</button>
+        <button data-num="4">4</button>
+        <button data-num="5">5</button>
+        <button data-num="6">6</button>
+        <button data-num="7">7</button>
+        <button data-num="8">8</button>
+        <button data-num="9">9</button>
+        <button style="visibility:hidden;"></button>
+        <button data-num="0">0</button>
+        <button id="numpadClear" class="btn-danger">C</button>
+      </div>
+
     </div>
 
-    <!-- AWAY -->
-    <div class="score-team">
-      <div><strong>Away</strong></div>
-
-      <div class="btn-row">
-        <button data-delta="-1" data-target="B" class="btn-danger">-1</button>
-        <button data-delta="1"  data-target="B">+1</button>
-        <button data-delta="2"  data-target="B">+2</button>
-        <button data-delta="3"  data-target="B">+3</button>
-      </div>
+    <div class="tiny">
+      Shortcuts: Space = Start/Stop · R = Shot 24 · F = Shot disabled · +/- = Shot ±1
     </div>
-
   </div>
+
+
+  <!-- COLONNA DESTRA: SCORES (HOME SOPRA, AWAY SOTTO) -->
+  <div class="card">
+    <h2>Scores</h2>
+
+    <div class="score-vert">
+
+      <!-- HOME -->
+      <div class="score-team">
+        <div><strong>Home</strong></div>
+        <div class="btn-row">
+          <button data-delta="-1" data-target="A" class="btn-danger">-1</button>
+          <button data-delta="1"  data-target="A">+1</button>
+          <button data-delta="2"  data-target="A">+2</button>
+          <button data-delta="3"  data-target="A">+3</button>
+        </div>
+      </div>
+
+      <!-- AWAY -->
+      <div class="score-team">
+        <div><strong>Away</strong></div>
+        <div class="btn-row">
+          <button data-delta="-1" data-target="B" class="btn-danger">-1</button>
+          <button data-delta="1"  data-target="B">+1</button>
+          <button data-delta="2"  data-target="B">+2</button>
+          <button data-delta="3"  data-target="B">+3</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row" style="justify-content:center; margin-top:10px;">
+      <button id="resetScores" class="btn-danger" style="min-width:200px;">Reset Scores</button>
+    </div>
+  </div>
+
+</div> <!-- fine .top-row -->
+
 
   <div class="row" style="justify-content:center; margin-top:10px;">
     <button id="resetScores" class="btn-danger" style="min-width:200px;">Reset Scores</button>
