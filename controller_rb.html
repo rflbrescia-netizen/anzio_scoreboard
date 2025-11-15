@@ -38,6 +38,13 @@
       box-shadow: 0 8px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
     }
 
+    /* Live preview sempre visibile in alto */
+    .live-card{
+      position: sticky;
+      top: 8px;
+      z-index: 50;
+    }
+
     h2{
       margin:0 0 12px;
       font-size:14px;
@@ -256,17 +263,20 @@
       align-items:center;
     }
 
+    /* TUTTI I BOTTONI SCORE SU UNA RIGA */
     .score-buttons{
-      display:grid;
-      grid-template-columns:repeat(2, minmax(64px,1fr));
+      display:flex;
+      flex-wrap:nowrap;
       gap:8px;
+      justify-content:space-between;
+      width:100%;
     }
 
     /* Mobile */
     @media (max-width:1024px){
       .wrap{
         grid-template-columns:1fr;
-      max-width:880px;
+        max-width:880px;
         padding:16px;
       }
       .card{ padding:14px; }
@@ -295,8 +305,8 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- 1) MINI SCOREBOARD -->
-    <div class="card">
+    <!-- 1) MINI SCOREBOARD (sticky) -->
+    <div class="card live-card">
       <h2>Live Preview</h2>
       <div class="mini-score">
         <div class="mini-team">
@@ -354,7 +364,7 @@
             <button id="shotReset">Shot 24</button>
             <input type="number" id="shotSet" min="1" max="99" value="24" style="width:80px"/>
             <button id="shotApply">Apply</button>
-            <!-- NUOVO: shot OFF -->
+            <!-- Shot OFF -->
             <button id="shotDisable" class="btn-danger" style="padding:8px 10px;min-height:36px;font-size:12px;">Shot OFF</button>
           </div>
         </div>
@@ -785,7 +795,7 @@
       markDirty();
     });
 
-    // NUOVO: disabilita shot clock
+    // disabilita shot clock
     c.shotDisable.addEventListener('click', ()=>{
       state.shotActive = false;
       renderMini();
@@ -928,3 +938,4 @@
   </script>
 </body>
 </html>
+
