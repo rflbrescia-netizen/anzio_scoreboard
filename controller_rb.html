@@ -247,13 +247,11 @@ button:active{ transform:translateY(1px); }
   align-items:flex-start;
 }
 
-/* Su schermi piccoli tornano uno sotto l'altro */
-@media (max-width:1024px){
+@media (max-width:700px) and (orientation:portrait){
   .top-row{
-    grid-template-columns:1fr;
+    grid-template-columns:1fr;  /* in verticale torna a una colonna */
   }
 }
-
 /* Score verticali (Home sopra, Away sotto) */
 .score-vert{
   display:flex;
