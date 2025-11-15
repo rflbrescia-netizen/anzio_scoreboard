@@ -142,7 +142,8 @@
     /* === Team blocks === */
     .team{
       display:grid;
-      grid-template-columns: 72px 1fr 86px auto;
+      /* logo (90) | nome flessibile | score (110) | meta */
+      grid-template-columns: 90px minmax(0, 1fr) 110px auto;
       grid-template-areas: "logo name score meta";
       gap:8px;
       align-items:center;
@@ -151,7 +152,7 @@
     }
 
     .team.right{
-      grid-template-columns: auto 86px 1fr 72px;
+      grid-template-columns: auto 110px minmax(0, 1fr) 90px;
       grid-template-areas: "meta score name logo";
       justify-items:end;
       align-items:center;
@@ -159,8 +160,8 @@
 
     .logo{
       grid-area:logo;
-      width:92px;          /* +20% rispetto a 60px */
-      height:92px;
+      width:90px;          /* logo grande */
+      height:90px;
       border-radius:10px;
       overflow:hidden;
       background:#0e2752;
@@ -188,6 +189,7 @@
       overflow:hidden;
       text-overflow:ellipsis;
       text-shadow:0 1px 2px rgba(0,0,0,.6);
+      min-width:0;           /* fondamentale per evitare sovrapposizioni */
     }
 
     .team.right .name{
@@ -212,12 +214,12 @@
     .score{
       grid-area:score;
       font-weight:1000;
-      font-size:54px;
+      font-size:54px;       /* punteggio più grande */
       line-height:1;
       display:flex;
       align-items:center;
       justify-content:center;
-      min-width:100px;
+      min-width:100px;      /* colonna più larga */
       height:60px;
       border-radius:12px;
       background:rgba(255,255,255,.08);
@@ -284,7 +286,7 @@
       text-align:center;
     }
 
-    /* Shot clock stile display a 7 segmenti */
+    /* Shot clock stile display a 7 segmenti, leggermente più piccolo */
     .shot-clock{
       min-width:70px;
       padding:4px 10px;
@@ -292,7 +294,7 @@
       background:#000000;
       border:2px solid #400000;
       font-family:"SevenSeg","Courier New",monospace;
-      font-size:30px;
+      font-size:30px;   /* ridotto */
       font-weight:700;
       text-align:center;
       letter-spacing:2px;
@@ -527,7 +529,6 @@
       if(!name) return '';
       const trimmed = String(name).trim();
       if(!trimmed) return '';
-      // prendo la prima parola significativa
       const firstWord = trimmed.split(/\s+/)[0];
       return firstWord.slice(0,3).toUpperCase();
     }
