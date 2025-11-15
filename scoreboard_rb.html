@@ -15,8 +15,7 @@
       --amber: #ffc44d;
     }
 
-    /*  Se vuoi usare un font 7 segmenti reale,
-        carica il file su GitHub e aggiorna l'URL sotto:
+    /* opzionale: se hai un font 7 segmenti:
     @font-face {
       font-family: "SevenSeg";
       src: url("https://rflbrescia-netizen.github.io/anzio_scoreboard/fonts/sevenseg.woff2") format("woff2");
@@ -56,6 +55,7 @@
       transition: opacity 0.2s ease;
       pointer-events:none;
     }
+
     .corner-logo:hover {
       opacity: 1;
     }
@@ -67,7 +67,8 @@
       height:100%;
       border-radius:14px 14px 0 0;
       display:grid;
-      grid-template-columns: 460px 1px 340px 1px 460px;
+      /* colonne: squadra - sep - centro - sep - squadra, centro flessibile */
+      grid-template-columns: 460px 1px minmax(340px, 1fr) 1px 460px;
       align-items:center;
       justify-items:center;
       padding:10px 20px 8px 20px;
@@ -141,7 +142,7 @@
     /* === Team blocks === */
     .team{
       display:grid;
-      grid-template-columns: 60px 1fr 86px auto;
+      grid-template-columns: 72px 1fr 86px auto;
       grid-template-areas: "logo name score meta";
       gap:8px;
       align-items:center;
@@ -150,7 +151,7 @@
     }
 
     .team.right{
-      grid-template-columns: auto 86px 1fr 60px;
+      grid-template-columns: auto 86px 1fr 72px;
       grid-template-areas: "meta score name logo";
       justify-items:end;
       align-items:center;
@@ -158,8 +159,8 @@
 
     .logo{
       grid-area:logo;
-      width:60px;
-      height:60px;
+      width:72px;          /* +20% rispetto a 60px */
+      height:72px;
       border-radius:10px;
       overflow:hidden;
       background:#0e2752;
@@ -176,16 +177,36 @@
       object-position: center;
     }
 
+    /* container nome su due righe */
     .name{
       grid-area:name;
-      font-weight:1000;
-      letter-spacing:.6px;
-      text-transform:uppercase;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:flex-start;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
-      font-size:30px;
       text-shadow:0 1px 2px rgba(0,0,0,.6);
+    }
+
+    .team.right .name{
+      align-items:flex-end;
+      text-align:right;
+    }
+
+    .name-abbr{
+      font-weight:1000;
+      letter-spacing:.6px;
+      font-size:30px;
+    }
+
+    .name-full{
+      margin-top:2px;
+      font-weight:700;
+      font-size:10px;  /* circa 1/3 */
+      letter-spacing:.3px;
+      opacity:0.9;
     }
 
     .score{
@@ -322,7 +343,7 @@
     /* Indicatori possesso: posizionati assoluti per NON spostare la grafica */
     .poss-indicator{
       position:absolute;
-      top:52%;                  /* centrato verticalmente rispetto ai clock */
+      top:52%;
       transform:translateY(-50%);
       width:18px;
       height:18px;
@@ -333,10 +354,10 @@
       transition:opacity .2s, box-shadow .2s, border-color .2s, transform .2s;
     }
     .poss-left{
-      left:18px;                /* lato casa */
+      left:18px;  /* lato casa */
     }
     .poss-right{
-      right:18px;               /* lato ospiti */
+      right:18px; /* lato ospiti */
     }
     .poss-indicator.on{
       opacity:1;
@@ -383,7 +404,10 @@
       <!-- Team A -->
       <div class="team">
         <div class="logo"><img src="" id="logoA" alt=""></div>
-        <div class="name" id="nameA">Anzio</div>
+        <div class="name" id="nameA">
+          <span class="name-abbr" id="abbrA">ANZ</span>
+          <span class="name-full" id="fullA">ANZIO</span>
+        </div>
         <div class="score" id="scoreA">0</div>
         <div class="meta">
           <div class="pill">
@@ -404,13 +428,12 @@
       <div class="center">
         <div class="brand">ANZIO BASKET FANS WEB TV</div>
 
-        <!-- Riga con orologio principale + shot clock -->
         <div class="clocks-row">
           <div class="clock" id="gameClock">12:00</div>
           <div class="shot-clock" id="shotClock">24</div>
         </div>
 
-        <!-- Indicatori possesso, NON influiscono sul layout -->
+        <!-- Indicatori possesso -->
         <div class="poss-indicator poss-left" id="possLeft"></div>
         <div class="poss-indicator poss-right" id="possRight"></div>
 
@@ -436,7 +459,10 @@
           </div>
         </div>
         <div class="score" id="scoreB">0</div>
-        <div class="name" id="nameB">Ospiti</div>
+        <div class="name" id="nameB">
+          <span class="name-abbr" id="abbrB">AWY</span>
+          <span class="name-full" id="fullB">OSPITI</span>
+        </div>
         <div class="logo"><img src="" id="logoB" alt=""></div>
       </div>
     </article>
@@ -444,7 +470,6 @@
 
   <!-- Firebase (modular v10+) -->
   <script type="module">
-    // Config (uguale al controller)
     const firebaseConfig = {
       apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
       authDomain: "anzio-scoreboard.firebaseapp.com",
@@ -467,11 +492,16 @@
 
     const $ = sel => document.querySelector(sel);
     const els = {
-      nameA: $('#nameA'), nameB: $('#nameB'),
+      // nomi
+      abbrA: $('#abbrA'), fullA: $('#fullA'),
+      abbrB: $('#abbrB'), fullB: $('#fullB'),
+      // loghi
       logoA: $('#logoA'), logoB: $('#logoB'),
+      // punteggi / statistiche
       scoreA: $('#scoreA'), scoreB: $('#scoreB'),
       foulsA: $('#foulsA'), foulsB: $('#foulsB'),
       bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
+      // centro
       period: $('#period'), timeouts: $('#timeouts'),
       gameClock: $('#gameClock'), shotClock: $('#shotClock'),
       possLeft: $('#possLeft'), possRight: $('#possRight')
@@ -492,6 +522,16 @@
       return neg ? `-${t}` : t;
     }
 
+    // abbreviazione automatica 3 lettere
+    function makeAbbr(name){
+      if(!name) return '';
+      const trimmed = String(name).trim();
+      if(!trimmed) return '';
+      // prendo la prima parola significativa
+      const firstWord = trimmed.split(/\s+/)[0];
+      return firstWord.slice(0,3).toUpperCase();
+    }
+
     function updatePossessionIndicators() {
       const { possLeft, possRight } = els;
       if (!possLeft || !possRight) return;
@@ -499,7 +539,6 @@
       possLeft.classList.remove('on');
       possRight.classList.remove('on');
 
-      // A = casa → led sinistro; B = ospiti → led destro
       if (state.poss === 'A') {
         possLeft.classList.add('on');
       } else if (state.poss === 'B') {
@@ -515,7 +554,6 @@
         el.classList.remove('crunch');
         return;
       }
-      // crunch time: 5 secondi o meno
       if (val <= 5 && val >= 0) {
         el.classList.add('crunch');
       } else {
@@ -524,8 +562,13 @@
     }
 
     function render(){
-      els.nameA.textContent = state.nameA;
-      els.nameB.textContent = state.nameB;
+      // nomi + abbreviazioni
+      els.fullA.textContent = state.nameA || '';
+      els.fullB.textContent = state.nameB || '';
+      els.abbrA.textContent = makeAbbr(state.nameA);
+      els.abbrB.textContent = makeAbbr(state.nameB);
+
+      // punteggi / falli / bonus
       els.scoreA.textContent = state.scoreA;
       els.scoreB.textContent = state.scoreB;
       els.foulsA.textContent = state.foulsA;
@@ -533,6 +576,7 @@
       els.period.textContent = state.period;
       els.timeouts.textContent = state.timeouts;
       els.shotClock.textContent = state.shotClock;
+
       els.logoA.src = state.logoA || '';
       els.logoB.src = state.logoB || '';
 
@@ -544,6 +588,7 @@
       updatePossessionIndicators();
       updateCrunchTime();
     }
+
     render();
 
     onValue(stateRef, (snap)=>{
