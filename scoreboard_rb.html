@@ -215,7 +215,6 @@
     }
     .dot.foul{background:var(--danger);}
     .dot.bonus{background:var(--lime);}
-    .dot.poss{background:var(--amber);}
 
     /* === Center === */
     .center{
@@ -235,12 +234,101 @@
       color:#DDF9FF;
       text-shadow: 0 0 10px rgba(57,213,255,0.9), 0 0 20px rgba(57,213,255,0.6);
     }
+
+    /* Riga orologi + possesso */
+    .clocks-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+    }
+
     .clock{
       font-weight:1000;
       font-size:46px;
       color:#eaf7ff;
       text-shadow:0 0 10px rgba(57,213,255,.85);
+      min-width:120px;
+      text-align:center;
     }
+
+    /* Shot clock stile display segmentato */
+    .shot-clock{
+      min-width:80px;
+      padding:6px 10px;
+      border-radius:8px;
+      background:
+        radial-gradient(circle at 30% 15%, #ffbfbf 0%, #550000 35%, #000 100%);
+      border:2px solid rgba(255,120,120,.7);
+      font-family:"Courier New", monospace;
+      font-size:36px;
+      font-weight:900;
+      text-align:center;
+      color:#ffeaea;
+      text-shadow:
+        0 0 4px rgba(255,120,120,.9),
+        0 0 8px rgba(255,120,120,.8),
+        0 0 14px rgba(255,120,120,.7);
+      box-shadow:
+        0 0 10px rgba(0,0,0,.9),
+        inset 0 0 6px rgba(0,0,0,.8);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+
+    /* Animazione crunch time */
+    @keyframes crunchPulse {
+      0% {
+        transform: scale(1);
+        box-shadow:
+          0 0 10px rgba(0,0,0,.9),
+          inset 0 0 6px rgba(0,0,0,.8);
+      }
+      50% {
+        transform: scale(1.10);
+        box-shadow:
+          0 0 14px rgba(255,120,120,1),
+          0 0 28px rgba(255,120,120,.9),
+          inset 0 0 8px rgba(0,0,0,.8);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow:
+          0 0 10px rgba(0,0,0,.9),
+          inset 0 0 6px rgba(0,0,0,.8);
+      }
+    }
+
+    .shot-clock.crunch{
+      border-color: var(--danger);
+      color:#fff5f5;
+      text-shadow:
+        0 0 6px rgba(255,85,117,1),
+        0 0 14px rgba(255,85,117,.9),
+        0 0 24px rgba(255,85,117,.8);
+      animation: crunchPulse 0.7s infinite ease-in-out;
+    }
+
+    /* Indicatori possesso (sinistra/destra) */
+    .poss-indicator{
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.35);
+      box-sizing:border-box;
+      opacity:.18;
+      transition:opacity .2s, box-shadow .2s, border-color .2s, transform .2s;
+    }
+    .poss-indicator.on{
+      opacity:1;
+      border-color:var(--amber);
+      background:
+        radial-gradient(circle, var(--amber) 0%, #7f4c00 55%, #000 100%);
+      box-shadow:
+        0 0 8px rgba(255,196,77,.9),
+        0 0 16px rgba(255,196,77,.7);
+      transform:scale(1.05);
+    }
+
     .center-meta{
       display:flex;
       align-items:center;
@@ -287,10 +375,6 @@
             <span class="label">Bonus</span>
             <span class="dot bonus"></span>
           </div>
-          <div class="pill" id="possAwrap">
-            <span class="label">Poss</span>
-            <span class="dot poss"></span>
-          </div>
         </div>
       </div>
 
@@ -299,10 +383,17 @@
       <!-- Center -->
       <div class="center">
         <div class="brand">ANZIO BASKET FANS WEB TV</div>
-        <div class="clock" id="gameClock">12:00</div>
+
+        <!-- Riga con orologio principale + shot clock + indicatori possesso -->
+        <div class="clocks-row">
+          <div class="poss-indicator" id="possLeft"></div>
+          <div class="clock" id="gameClock">12:00</div>
+          <div class="shot-clock" id="shotClock">24</div>
+          <div class="poss-indicator" id="possRight"></div>
+        </div>
+
         <div class="center-meta">
           <div class="chip"><span>Tempo</span><span id="period">1</span></div>
-          <div class="chip"><span>Shot</span><span id="shotClock">24</span></div>
           <div class="chip"><span>Time Out</span><span id="timeouts">7</span></div>
         </div>
       </div>
@@ -312,10 +403,6 @@
       <!-- Team B -->
       <div class="team right">
         <div class="meta">
-          <div class="pill" id="possBwrap">
-            <span class="label">Poss</span>
-            <span class="dot poss"></span>
-          </div>
           <div class="pill" id="bonusBwrap">
             <span class="label">Bonus</span>
             <span class="dot bonus"></span>
@@ -363,9 +450,9 @@
       scoreA: $('#scoreA'), scoreB: $('#scoreB'),
       foulsA: $('#foulsA'), foulsB: $('#foulsB'),
       bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
-      possAwrap: $('#possAwrap'), possBwrap: $('#possBwrap'),
       period: $('#period'), timeouts: $('#timeouts'),
-      gameClock: $('#gameClock'), shotClock: $('#shotClock')
+      gameClock: $('#gameClock'), shotClock: $('#shotClock'),
+      possLeft: $('#possLeft'), possRight: $('#possRight')
     };
 
     const state = {
@@ -383,6 +470,36 @@
       return neg ? `-${t}` : t;
     }
 
+    function updatePossessionIndicators() {
+      const { possLeft, possRight } = els;
+      if (!possLeft || !possRight) return;
+
+      possLeft.classList.remove('on');
+      possRight.classList.remove('on');
+
+      if (state.poss === 'A') {
+        possLeft.classList.add('on');
+      } else if (state.poss === 'B') {
+        possRight.classList.add('on');
+      }
+    }
+
+    function updateCrunchTime(){
+      const el = els.shotClock;
+      if (!el) return;
+      const val = Number(state.shotClock);
+      if (!Number.isFinite(val)) {
+        el.classList.remove('crunch');
+        return;
+      }
+      // crunch time: 5 secondi o meno
+      if (val <= 5 && val >= 0) {
+        el.classList.add('crunch');
+      } else {
+        el.classList.remove('crunch');
+      }
+    }
+
     function render(){
       els.nameA.textContent = state.nameA;
       els.nameB.textContent = state.nameB;
@@ -398,10 +515,11 @@
 
       if(els.bonusAwrap) els.bonusAwrap.style.opacity = state.bonusA ? 1 : .35;
       if(els.bonusBwrap) els.bonusBwrap.style.opacity = state.bonusB ? 1 : .35;
-      if(els.possAwrap)  els.possAwrap.style.opacity = state.poss === 'A' ? 1 : .3;
-      if(els.possBwrap)  els.possBwrap.style.opacity = state.poss === 'B' ? 1 : .3;
 
       els.gameClock.textContent = fmtClock(state.gameClockMS);
+
+      updatePossessionIndicators();
+      updateCrunchTime();
     }
     render();
 
