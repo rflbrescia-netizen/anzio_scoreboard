@@ -250,6 +250,39 @@ button:active{ transform:translateY(1px); }
   font-weight:800;
   border-radius:10px;
 }
+/* Riduzione in altezza della sezione Game Clock & Shot Clock */
+.clock-card{
+  padding:10px 14px;              /* meno padding verticale */
+}
+
+.clock-card .row{
+  margin-bottom:4px;              /* meno spazio tra le righe */
+}
+
+.clock-card button{
+  padding:6px 10px;               /* bottoni più compatti */
+  min-height:32px;
+  font-size:14px;
+}
+
+.clock-card input,
+.clock-card select{
+  padding:6px 8px;                /* input più bassi */
+  font-size:14px;
+}
+
+/* numpad più piccolo */
+.clock-card #numpad{
+  grid-template-columns:repeat(3, 30px);
+  gap:4px;
+}
+
+.clock-card #numpad button{
+  min-width:30px;
+  min-height:30px;
+  padding:4px;
+  font-size:14px;
+}
 
 </style>
 </head>
@@ -289,7 +322,7 @@ button:active{ transform:translateY(1px); }
 <!--                       CLOCK & SHOT CLOCK                  -->
 <!-- ========================================================= -->
 
-<div class="card">
+<div class="card clock-card">
   <h2>Game Clock & Shot Clock</h2>
 
   <div class="clock-block">
