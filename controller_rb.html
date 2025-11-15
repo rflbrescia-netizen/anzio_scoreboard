@@ -266,7 +266,7 @@
     @media (max-width:1024px){
       .wrap{
         grid-template-columns:1fr;
-        max-width:880px;
+      max-width:880px;
         padding:16px;
       }
       .card{ padding:14px; }
@@ -354,6 +354,8 @@
             <button id="shotReset">Shot 24</button>
             <input type="number" id="shotSet" min="1" max="99" value="24" style="width:80px"/>
             <button id="shotApply">Apply</button>
+            <!-- NUOVO: shot OFF -->
+            <button id="shotDisable" class="btn-danger" style="padding:8px 10px;min-height:36px;font-size:12px;">Shot OFF</button>
           </div>
         </div>
 
@@ -553,6 +555,7 @@
       shotReset: $('#shotReset'),
       shotSet: $('#shotSet'),
       shotApply: $('#shotApply'),
+      shotDisable: $('#shotDisable'),
 
       // scores / period / TO
       periodView: $('#periodView'),
@@ -605,7 +608,8 @@
       c.miniFoulsA.textContent = state.foulsA;
       c.miniFoulsB.textContent = state.foulsB;
       c.miniClock.textContent  = fmtClock(state.gameClockMS);
-      c.miniShot.textContent   = state.shotClock;
+      // se shot disattivo, mostra "--"
+      c.miniShot.textContent   = state.shotActive ? state.shotClock : '--';
       c.miniPeriod.textContent = state.period;
       c.miniBonusA.classList.toggle('on', !!state.bonusA);
       c.miniBonusB.classList.toggle('on', !!state.bonusB);
@@ -777,6 +781,13 @@
       const v = Math.max(1, Math.min(99, parseInt(c.shotSet.value || 24)));
       state.shotClock  = v;
       state.shotActive = true;
+      renderMini();
+      markDirty();
+    });
+
+    // NUOVO: disabilita shot clock
+    c.shotDisable.addEventListener('click', ()=>{
+      state.shotActive = false;
       renderMini();
       markDirty();
     });
