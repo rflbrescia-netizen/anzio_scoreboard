@@ -577,6 +577,8 @@ button:active{ transform:translateY(1px); }
     <button id="loadState">Load State</button>
     <button id="forceSync" class="btn-accent">Force Sync</button>
     <button id="resetAll" class="btn-danger">Reset All</button>
+        <button id="forceReload" class="btn-accent">Forza Refresh Overlay</button>
+
   </div>
 </div>
 
@@ -1086,6 +1088,11 @@ c.forceSync.addEventListener("click", () => {
 });
 
 c.resetAll.addEventListener("click", () => {
+  const forceReloadBtn = document.querySelector('#forceReload');
+forceReloadBtn.addEventListener('click', () => {
+  update(ref(db, '/overlayReload'), { nonce: Date.now() });
+  alert('Richiesta di refresh inviata al broadcast.');
+});
   Object.assign(state, {
     nameA: "Home",
     nameB: "Away",
