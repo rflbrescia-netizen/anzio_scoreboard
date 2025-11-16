@@ -488,7 +488,10 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
+db.ref('/overlayReload').on('value', () => {
+  console.log("Reload remoto richiesto");
+  location.reload();
+});
     const app = initializeApp(firebaseConfig);
     const db  = getDatabase(app);
     const stateRef = ref(db, `games/${GAME_ID}/state`);
