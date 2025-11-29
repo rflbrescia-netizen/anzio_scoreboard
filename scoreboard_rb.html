@@ -1,4 +1,518 @@
 <!DOCTYPE html>
+
+<script type="module">
+/* -----------------------------------------------------------
+   1. IMPORT FIREBASE (devono stare all'inizio)
+------------------------------------------------------------ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  update,
+  set,
+  serverTimestamp,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* -----------------------------------------------------------
+   2. FIREBASE CONFIG
+------------------------------------------------------------ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
+  authDomain: "anzio-scoreboard.firebaseapp.com",
+  databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "anzio-scoreboard",
+  storageBucket: "anzio-scoreboard.firebasestorage.app",
+  messagingSenderId: "1070047467007",
+  appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
+  measurementId: "G-HJB4DC7GN7"
+};
+
+const GAME_ID =
+  new URLSearchParams(location.search).get("game") ||
+  "anzio-scoreboard-3d8bb";
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const stateRef = ref(db, `games/${GAME_ID}/state`);
+const metaRef  = ref(db, `games/${GAME_ID}/meta`);
+
+/* -----------------------------------------------------------
+   3. DOM HELPERS
+------------------------------------------------------------ */
+const $ = sel => document.querySelector(sel);
+
+/* -----------------------------------------------------------
+   4. STATE DEL CONTROLLER
+------------------------------------------------------------ */
+const state = {
+  nameA: "Home",
+  nameB: "Away",
+  logoA: "",
+  logoB: "",
+
+  scoreA: 0,
+  scoreB: 0,
+
+  foulsA: 0,
+  foulsB: 0,
+
+  bonusA: false,
+  bonusB: false,
+
+  period: 1,
+  timeouts: 7,
+
+  gameClockMS: 12 * 60 * 1000,
+  gameRunning: false,
+
+  shotClock: 24,
+  shotEnabled: true,
+
+  poss: null
+};
+
+/* -----------------------------------------------------------
+   5. ELEMENTS
+------------------------------------------------------------ */
+const c = {
+
+  /* mini preview */
+  miniScoreA: $('#miniScoreA'),
+  miniScoreB: $('#miniScoreB'),
+  miniFoulsA: $('#miniFoulsA'),
+  miniFoulsB: $('#miniFoulsB'),
+  miniBonusA: $('#miniBonusA'),
+  miniBonusB: $('#miniBonusB'),
+  miniClock:  $('#miniClock'),
+  miniShot:   $('#miniShot'),
+  miniPeriod: $('#miniPeriod'),
+
+  /* clock */
+  clkStart: $('#clkStart'),
+  clkStop:  $('#clkStop'),
+  clkSet:   $('#clkSet'),
+  clkApply: $('#clkApply'),
+  clkPreset: $('#clkPreset'),
+  clkPresetApply: $('#clkPresetApply'),
+
+  /* shot */
+  shotReset: $('#shotReset'),
+  shotSet: $('#shotSet'),
+  shotApply: $('#shotApply'),
+  shotDisable: $('#shotDisable'),
+
+  /* numpad */
+  numpad: $('#numpad'),
+  numpadClear: $('#numpadClear'),
+
+  /* scores */
+  resetScores: $('#resetScores'),
+
+  /* period & timeouts */
+  periodView: $('#periodView'),
+  timeoutsView: $('#timeoutsView'),
+  perDec: $('#perDec'),
+  perInc: $('#perInc'),
+  toDec:  $('#toDec'),
+  toInc:  $('#toInc'),
+
+  /* fouls */
+  foulsAView: $('#foulsAView'),
+  foulsBView: $('#foulsBView'),
+  resetFouls: $('#resetFouls'),
+  bonusAToggle: $('#bonusAToggle'),
+  bonusBToggle: $('#bonusBToggle'),
+
+  /* possession */
+  possA: $('#possA'),
+  possB: $('#possB'),
+  possClear: $('#possClear'),
+
+  /* teams */
+  inNameA: $('#inNameA'),
+  inNameB: $('#inNameB'),
+  inLogoA: $('#inLogoA'),
+  inLogoB: $('#inLogoB'),
+  swapTeams: $('#swapTeams'),
+  resetLogos: $('#resetLogos'),
+
+  /* utilities */
+  saveState: $('#saveState'),
+  loadState: $('#loadState'),
+  forceSync: $('#forceSync'),
+  resetAll: $('#resetAll'),
+  forceReload: $('#forceReload')   // ← AGGIUNTO
+};
+
+/* -----------------------------------------------------------
+   6. RENDER MINIPREVIEW
+------------------------------------------------------------ */
+function fmt(ms) {
+  const m = Math.floor(ms / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function renderPreview() {
+  c.miniScoreA.textContent = state.scoreA;
+  c.miniScoreB.textContent = state.scoreB;
+
+  c.miniFoulsA.textContent = "F:" + state.foulsA;
+  c.miniFoulsB.textContent = "F:" + state.foulsB;
+
+  c.miniBonusA.classList.toggle("mini-active", state.bonusA);
+  c.miniBonusB.classList.toggle("mini-active", state.bonusB);
+
+  c.miniClock.textContent = fmt(state.gameClockMS);
+  c.miniShot.textContent = state.shotEnabled ? state.shotClock : "--";
+
+  c.miniPeriod.textContent = state.period;
+}
+
+/* -----------------------------------------------------------
+   7. PUSH FIREBASE (throttled)
+------------------------------------------------------------ */
+let dirty = true;
+
+const pushNow = () => {
+  update(stateRef, { ...state }).then(() => {
+    update(metaRef, { updatedAt: serverTimestamp() });
+  });
+  dirty = false;
+};
+
+setInterval(() => {
+  if (dirty) pushNow();
+}, 200);
+
+function markDirty() {
+  dirty = true;
+}
+
+/* -----------------------------------------------------------
+   8. CLOCK ENGINE
+------------------------------------------------------------ */
+let lastTick = 0;
+let lastShotTick = 0;
+let rafId = null;
+
+function tick(ts) {
+  if (!lastTick) lastTick = ts;
+  if (!lastShotTick) lastShotTick = ts;
+
+  const dt = ts - lastTick;
+  lastTick = ts;
+
+  if (state.gameRunning) {
+    state.gameClockMS = Math.max(0, state.gameClockMS - dt);
+
+    if (state.shotEnabled && ts - lastShotTick >= 1000) {
+      state.shotClock = Math.max(0, state.shotClock - 1);
+      lastShotTick = ts;
+    }
+
+    markDirty();
+    renderPreview();
+  }
+
+  rafId = requestAnimationFrame(tick);
+}
+rafId = requestAnimationFrame(tick);
+
+/* -----------------------------------------------------------
+   9. CLOCK BUTTONS
+------------------------------------------------------------ */
+c.clkStart.addEventListener("click", () => {
+  state.gameRunning = true;
+  lastTick = 0;
+  lastShotTick = 0;
+  markDirty();
+});
+
+c.clkStop.addEventListener("click", () => {
+  state.gameRunning = false;
+  markDirty();
+});
+
+c.clkApply.addEventListener("click", () => {
+  const m = /^([0-9]{1,2}):([0-5][0-9])$/.exec(c.clkSet.value.trim());
+  if (!m) return;
+  state.gameClockMS = (+m[1] * 60 + +m[2]) * 1000;
+  markDirty();
+  renderPreview();
+});
+
+c.clkPresetApply.addEventListener("click", () => {
+  state.gameClockMS = parseInt(c.clkPreset.value);
+  markDirty();
+  renderPreview();
+});
+
+/* -----------------------------------------------------------
+   10. SHOT CLOCK
+------------------------------------------------------------ */
+c.shotReset.addEventListener("click", () => {
+  if (state.shotEnabled) state.shotClock = 24;
+  markDirty();
+  renderPreview();
+});
+
+c.shotApply.addEventListener("click", () => {
+  const v = Math.max(1, Math.min(99, +c.shotSet.value || 24));
+  state.shotClock = v;
+  markDirty();
+  renderPreview();
+});
+
+c.shotDisable.addEventListener("click", () => {
+  state.shotEnabled = !state.shotEnabled;
+  c.shotDisable.textContent = state.shotEnabled ? "Shot OFF" : "Shot ON";
+  markDirty();
+  renderPreview();
+});
+
+/* -----------------------------------------------------------
+   11. NUMPAD
+------------------------------------------------------------ */
+c.numpad.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-num]");
+  if (!btn) return;
+
+  let current = c.clkSet.value.replace(":", "");
+  if (current.length >= 4) current = "";
+
+  current += btn.dataset.num;
+
+  if (current.length <= 2) {
+    c.clkSet.value = current.padStart(1, "0");
+  } else {
+    let m = current.slice(0, -2);
+    let s = current.slice(-2);
+    c.clkSet.value = `${m}:${s}`;
+  }
+});
+
+c.numpadClear.addEventListener("click", () => {
+  c.clkSet.value = "";
+});
+
+/* -----------------------------------------------------------
+   12. SCORES
+------------------------------------------------------------ */
+document.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-delta][data-target]");
+  if (!btn) return;
+
+  const delta = +btn.dataset.delta;
+  const key = btn.dataset.target === "A" ? "scoreA" : "scoreB";
+
+  state[key] = Math.max(0, state[key] + delta);
+  markDirty();
+  renderPreview();
+});
+
+c.resetScores.addEventListener("click", () => {
+  state.scoreA = 0;
+  state.scoreB = 0;
+  markDirty();
+  renderPreview();
+});
+
+/* -----------------------------------------------------------
+   13. FOULS & BONUS
+------------------------------------------------------------ */
+document.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-foul]");
+  if (!btn) return;
+
+  const delta = +btn.dataset.delta;
+  const key = btn.dataset.foul === "A" ? "foulsA" : "foulsB";
+
+  state[key] = Math.max(0, state[key] + delta);
+  markDirty();
+  renderPreview();
+});
+
+c.resetFouls.addEventListener("click", () => {
+  state.foulsA = 0;
+  state.foulsB = 0;
+  state.bonusA = false;
+  state.bonusB = false;
+  markDirty();
+  renderPreview();
+});
+
+c.bonusAToggle.addEventListener("click", () => {
+  state.bonusA = !state.bonusA;
+  markDirty();
+  renderPreview();
+});
+
+c.bonusBToggle.addEventListener("click", () => {
+  state.bonusB = !state.bonusB;
+  markDirty();
+  renderPreview();
+});
+
+/* -----------------------------------------------------------
+   14. PERIOD & TIMEOUTS
+------------------------------------------------------------ */
+c.perDec.addEventListener("click", () => {
+  state.period = Math.max(1, state.period - 1);
+  markDirty();
+  renderPreview();
+  c.periodView.textContent = state.period;
+});
+c.perInc.addEventListener("click", () => {
+  state.period = Math.min(9, state.period + 1);
+  markDirty();
+  renderPreview();
+  c.periodView.textContent = state.period;
+});
+
+c.toDec.addEventListener("click", () => {
+  state.timeouts = Math.max(0, state.timeouts - 1);
+  markDirty();
+  c.timeoutsView.textContent = state.timeouts;
+});
+c.toInc.addEventListener("click", () => {
+  state.timeouts = Math.min(10, state.timeouts + 1);
+  markDirty();
+  c.timeoutsView.textContent = state.timeouts;
+});
+
+/* -----------------------------------------------------------
+   15. POSSESSION
+------------------------------------------------------------ */
+c.possA.addEventListener("click", () => {
+  state.poss = "A";
+  markDirty();
+});
+c.possB.addEventListener("click", () => {
+  state.poss = "B";
+  markDirty();
+});
+c.possClear.addEventListener("click", () => {
+  state.poss = null;
+  markDirty();
+});
+
+/* -----------------------------------------------------------
+   16. TEAMS
+------------------------------------------------------------ */
+c.inNameA.addEventListener("input", e => {
+  state.nameA = e.target.value || "Home";
+  markDirty();
+});
+
+c.inNameB.addEventListener("input", e => {
+  state.nameB = e.target.value || "Away";
+  markDirty();
+});
+
+function loadLogo(file, key) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    state[key] = r.result;
+    markDirty();
+  };
+  r.readAsDataURL(file);
+}
+
+c.inLogoA.addEventListener("change", e => loadLogo(e.target.files[0], "logoA"));
+c.inLogoB.addEventListener("change", e => loadLogo(e.target.files[0], "logoB"));
+
+c.swapTeams.addEventListener("click", () => {
+  [state.nameA, state.nameB] = [state.nameB, state.nameA];
+  [state.logoA, state.logoB] = [state.logoB, state.logoA];
+  [state.scoreA, state.scoreB] = [state.scoreB, state.scoreA];
+  [state.foulsA, state.foulsB] = [state.foulsB, state.foulsA];
+  state.poss = state.poss === "A" ? "B" :
+               state.poss === "B" ? "A" : null;
+
+  markDirty();
+  renderPreview();
+});
+
+c.resetLogos.addEventListener("click", () => {
+  state.logoA = "";
+  state.logoB = "";
+  markDirty();
+});
+
+/* -----------------------------------------------------------
+   17. UTILITIES
+------------------------------------------------------------ */
+c.saveState.addEventListener("click", () => {
+  localStorage.setItem("pro-scoreboard", JSON.stringify(state));
+  alert("Saved locally");
+});
+
+c.loadState.addEventListener("click", () => {
+  try {
+    const data = JSON.parse(localStorage.getItem("pro-scoreboard") || "{}");
+    Object.assign(state, data);
+    markDirty();
+    renderPreview();
+  } catch (e) {}
+});
+
+c.forceSync.addEventListener("click", () => {
+  dirty = true;
+  pushNow();
+  alert("Forced sync sent!");
+});
+
+c.resetAll.addEventListener("click", () => {
+  Object.assign(state, {
+    nameA: "Home",
+    nameB: "Away",
+    logoA: "",
+    logoB: "",
+    scoreA: 0,
+    scoreB: 0,
+    foulsA: 0,
+    foulsB: 0,
+    bonusA: false,
+    bonusB: false,
+    period: 1,
+    timeouts: 7,
+    gameClockMS: 12 * 60 * 1000,
+    gameRunning: false,
+    shotClock: 24,
+    shotEnabled: true,
+    poss: null
+  });
+
+  markDirty();
+  renderPreview();
+});
+
+/* 👉 listener corretto per Forza Refresh Overlay */
+c.forceReload.addEventListener("click", () => {
+  update(ref(db, "/overlayReload"), { nonce: Date.now() });
+  alert("Richiesta di refresh inviata all'overlay.");
+});
+
+/* -----------------------------------------------------------
+   18. CONTROLLER PRESENCE
+------------------------------------------------------------ */
+onDisconnect(metaRef).update({ controllerOnline:false });
+
+update(metaRef, {
+  controllerOnline: true,
+  updatedAt: serverTimestamp(),
+  gameId: GAME_ID
+});
+
+renderPreview();
+pushNow();
+</script>
+
+
 <html lang="it">
 <head>
   <meta charset="utf-8" />
@@ -446,146 +960,7 @@
     </article>
   </div>
 
-  <!-- Firebase (modular v10+) -->
-<script type="module">
-  // Import PRIMA di tutto il resto
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
-    authDomain: "anzio-scoreboard.firebaseapp.com",
-    databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "anzio-scoreboard",
-    storageBucket: "anzio-scoreboard.firebasestorage.app",
-    messagingSenderId: "1070047467007",
-    appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
-    measurementId: "G-HJB4DC7GN7"
-  };
-
-  const GAME_ID =
-    new URLSearchParams(location.search).get("game") ||
-    "anzio-scoreboard-3d8bb";
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getDatabase(app);
-
-  // reload remoto
-  const reloadRef = ref(db, "/overlayReload");
-  onValue(reloadRef, () => {
-    console.log("Reload remoto richiesto");
-    location.reload();
-  });
-
-  const stateRef = ref(db, `games/${GAME_ID}/state`);
-
-  const $ = sel => document.querySelector(sel);
-  const els = {
-    // nomi
-    abbrA: $('#abbrA'), fullA: $('#fullA'),
-    abbrB: $('#abbrB'), fullB: $('#fullB'),
-    // loghi
-    logoA: $('#logoA'), logoB: $('#logoB'),
-    // punteggi / statistiche
-    scoreA: $('#scoreA'), scoreB: $('#scoreB'),
-    foulsA: $('#foulsA'), foulsB: $('#foulsB'),
-    bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
-    // centro
-    period: $('#period'), timeouts: $('#timeouts'),
-    gameClock: $('#gameClock'), shotClock: $('#shotClock'),
-    possLeft: $('#possLeft'), possRight: $('#possRight')
-  };
-
-  const state = {
-    nameA:'Home', nameB:'Away', logoA:'', logoB:'',
-    scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false,
-    period:1, timeouts:7, gameClockMS:12*60*1000, shotClock:24, poss:null
-  };
-
-  function fmtClock(ms){
-    const neg = ms<0;
-    const abs=Math.abs(ms);
-    const m=Math.floor(abs/60000);
-    const s=Math.floor((abs%60000)/1000);
-    const t=`${m}:${s.toString().padStart(2,'0')}`;
-    return neg ? `-${t}` : t;
-  }
-
-  // abbreviazione automatica 3 lettere
-  function makeAbbr(name){
-    if(!name) return '';
-    const trimmed = String(name).trim();
-    if(!trimmed) return '';
-    const firstWord = trimmed.split(/\s+/)[0];
-    return firstWord.slice(0,3).toUpperCase();
-  }
-
-  function updatePossessionIndicators() {
-    const { possLeft, possRight } = els;
-    if (!possLeft || !possRight) return;
-
-    possLeft.classList.remove('on');
-    possRight.classList.remove('on');
-
-    if (state.poss === 'A') {
-      possLeft.classList.add('on');
-    } else if (state.poss === 'B') {
-      possRight.classList.add('on');
-    }
-  }
-
-  function updateCrunchTime(){
-    const el = els.shotClock;
-    if (!el) return;
-    const val = Number(state.shotClock);
-    if (!Number.isFinite(val)) {
-      el.classList.remove('crunch');
-      return;
-    }
-    if (val <= 5 && val >= 0) {
-      el.classList.add('crunch');
-    } else {
-      el.classList.remove('crunch');
-    }
-  }
-
-  function render(){
-    // nomi + abbreviazioni
-    els.fullA.textContent = state.nameA || '';
-    els.fullB.textContent = state.nameB || '';
-    els.abbrA.textContent = makeAbbr(state.nameA);
-    els.abbrB.textContent = makeAbbr(state.nameB);
-
-    // punteggi / falli / bonus
-    els.scoreA.textContent = state.scoreA;
-    els.scoreB.textContent = state.scoreB;
-    els.foulsA.textContent = state.foulsA;
-    els.foulsB.textContent = state.foulsB;
-    els.period.textContent = state.period;
-    els.timeouts.textContent = state.timeouts;
-    els.shotClock.textContent = state.shotClock;
-
-    els.logoA.src = state.logoA || '';
-    els.logoB.src = state.logoB || '';
-
-    if(els.bonusAwrap) els.bonusAwrap.style.opacity = state.bonusA ? 1 : .25;
-    if(els.bonusBwrap) els.bonusBwrap.style.opacity = state.bonusB ? 1 : .25;
-
-    els.gameClock.textContent = fmtClock(state.gameClockMS);
-
-    updatePossessionIndicators();
-    updateCrunchTime();
-  }
-
-  render();
-
-  onValue(stateRef, (snap)=>{
-    const v = snap.val();
-    if(!v) return;
-    Object.assign(state, v);
-    render();
-  });
-</script>
 
 </body>
 </html>
