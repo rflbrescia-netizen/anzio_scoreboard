@@ -134,9 +134,7 @@ button:active{ transform:translateY(1px); }
   .grid-2{ grid-template-columns:1fr; }
 }
 
-/* ------------------------------- */
-/*       MINI LIVE PREVIEW FIXED   */
-/* ------------------------------- */
+/* MINI PREVIEW */
 #miniPreview{
   position:sticky;
   top:0;
@@ -196,10 +194,7 @@ button:active{ transform:translateY(1px); }
   color:#000;
 }
 
-/* ------------------------------- */
-/*         CLOCK SECTION           */
-/* ------------------------------- */
-
+/* CLOCK SECTION */
 .clock-block{
   display:flex;
   justify-content:space-between;
@@ -220,10 +215,7 @@ button:active{ transform:translateY(1px); }
   min-height:36px;
 }
 
-/* ------------------------------- */
-/*         SCORES SECTION          */
-/* ------------------------------- */
-
+/* SCORES SECTION */
 .score-box{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -253,7 +245,7 @@ button:active{ transform:translateY(1px); }
   }
 }
 
-/* Score verticali (Home sopra, Away sotto) */
+/* Score verticali */
 .score-vert{
   display:flex;
   flex-direction:column;
@@ -272,7 +264,7 @@ button:active{ transform:translateY(1px); }
   border-radius:10px;
 }
 
-/* Riduzione in altezza della sezione Clock */
+/* Riduzione altezza clock */
 .clock-card{
   padding:10px 14px;
 }
@@ -335,7 +327,7 @@ button:active{ transform:translateY(1px); }
   </div>
 </div>
 
-<!-- RIGA SUPERIORE: CLOCK + SCORES -->
+<!-- CLOCK + SCORES -->
 <div class="top-row">
 
   <!-- GAME CLOCK & SHOT CLOCK -->
@@ -540,18 +532,17 @@ button:active{ transform:translateY(1px); }
 
 <!-- FIREBASE + CONTROLLER -->
 <script type="module">
-/* 1. IMPORT FIREBASE */
+/* IMPORT FIREBASE */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getDatabase,
   ref,
   update,
-  set,
   serverTimestamp,
   onDisconnect
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* 2. CONFIG */
+/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
   authDomain: "anzio-scoreboard.firebaseapp.com",
@@ -562,7 +553,7 @@ const firebaseConfig = {
   appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
   measurementId: "G-HJB4DC7GN7"
 };
-  
+
 const GAME_ID =
   new URLSearchParams(location.search).get("game") ||
   "anzio-scoreboard-3d8bb";
@@ -573,10 +564,10 @@ const db = getDatabase(app);
 const stateRef = ref(db, `games/${GAME_ID}/state`);
 const metaRef  = ref(db, `games/${GAME_ID}/meta`);
 
-/* 3. DOM HELPER */
+/* DOM HELPER */
 const $ = sel => document.querySelector(sel);
 
-/* 4. STATE */
+/* STATE */
 const state = {
   nameA: "Home",
   nameB: "Away",
@@ -604,7 +595,7 @@ const state = {
   poss: null
 };
 
-/* 5. ELEMENTS */
+/* ELEMENTS */
 const c = {
 
   /* mini preview */
@@ -675,7 +666,7 @@ const c = {
   forceReload: $('#forceReload')
 };
 
-/* 6. PREVIEW */
+/* PREVIEW */
 function fmt(ms) {
   const m = Math.floor(ms / 60000);
   const s = Math.floor((ms % 60000) / 1000);
@@ -698,7 +689,7 @@ function renderPreview() {
   c.miniPeriod.textContent = state.period;
 }
 
-/* 7. PUSH FIREBASE */
+/* PUSH FIREBASE */
 let dirty = true;
 
 const pushNow = () => {
@@ -716,7 +707,7 @@ function markDirty() {
   dirty = true;
 }
 
-/* 8. CLOCK ENGINE */
+/* CLOCK ENGINE */
 let lastTick = 0;
 let lastShotTick = 0;
 let rafId = null;
@@ -744,7 +735,7 @@ function tick(ts) {
 }
 rafId = requestAnimationFrame(tick);
 
-/* 9. CLOCK BUTTONS */
+/* CLOCK BUTTONS */
 c.clkStart.addEventListener("click", () => {
   state.gameRunning = true;
   lastTick = 0;
@@ -771,7 +762,7 @@ c.clkPresetApply.addEventListener("click", () => {
   renderPreview();
 });
 
-/* 10. SHOT CLOCK */
+/* SHOT CLOCK */
 c.shotReset.addEventListener("click", () => {
   if (state.shotEnabled) state.shotClock = 24;
   markDirty();
@@ -792,7 +783,7 @@ c.shotDisable.addEventListener("click", () => {
   renderPreview();
 });
 
-/* 11. NUMPAD */
+/* NUMPAD */
 c.numpad.addEventListener("click", e => {
   const btn = e.target.closest("button[data-num]");
   if (!btn) return;
@@ -815,7 +806,7 @@ c.numpadClear.addEventListener("click", () => {
   c.clkSet.value = "";
 });
 
-/* 12. SCORES */
+/* SCORES */
 document.addEventListener("click", e => {
   const btn = e.target.closest("button[data-delta][data-target]");
   if (!btn) return;
@@ -835,7 +826,7 @@ c.resetScores.addEventListener("click", () => {
   renderPreview();
 });
 
-/* 13. FOULS & BONUS */
+/* FOULS & BONUS */
 document.addEventListener("click", e => {
   const btn = e.target.closest("button[data-foul]");
   if (!btn) return;
@@ -869,7 +860,7 @@ c.bonusBToggle.addEventListener("click", () => {
   renderPreview();
 });
 
-/* 14. PERIOD & TIMEOUTS */
+/* PERIOD & TIMEOUTS */
 c.perDec.addEventListener("click", () => {
   state.period = Math.max(1, state.period - 1);
   markDirty();
@@ -894,7 +885,7 @@ c.toInc.addEventListener("click", () => {
   c.timeoutsView.textContent = state.timeouts;
 });
 
-/* 15. POSSESSION */
+/* POSSESSION */
 c.possA.addEventListener("click", () => {
   state.poss = "A";
   markDirty();
@@ -908,7 +899,7 @@ c.possClear.addEventListener("click", () => {
   markDirty();
 });
 
-/* 16. TEAMS */
+/* TEAMS */
 c.inNameA.addEventListener("input", e => {
   state.nameA = e.target.value || "Home";
   markDirty();
@@ -950,7 +941,7 @@ c.resetLogos.addEventListener("click", () => {
   markDirty();
 });
 
-/* 17. UTILITIES */
+/* UTILITIES */
 c.saveState.addEventListener("click", () => {
   localStorage.setItem("pro-scoreboard", JSON.stringify(state));
   alert("Saved locally");
@@ -1002,7 +993,7 @@ c.forceReload.addEventListener("click", () => {
   alert("Richiesta di refresh inviata all'overlay.");
 });
 
-/* 18. CONTROLLER PRESENCE */
+/* CONTROLLER PRESENCE */
 onDisconnect(metaRef).update({ controllerOnline:false });
 
 update(metaRef, {
