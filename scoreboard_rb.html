@@ -447,141 +447,145 @@
   </div>
 
   <!-- Firebase (modular v10+) -->
-  <script type="module">
-    const firebaseConfig = {
-      apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
-      authDomain: "anzio-scoreboard.firebaseapp.com",
-      databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "anzio-scoreboard",
-      storageBucket: "anzio-scoreboard.firebasestorage.app",
-      messagingSenderId: "1070047467007",
-      appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
-      measurementId: "G-HJB4DC7GN7"
-    };
+<script type="module">
+  // Import PRIMA di tutto il resto
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    const GAME_ID = new URLSearchParams(location.search).get('game') || 'anzio-scoreboard-3d8bb';
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxuUUK8xbO50mERK2hU6xxwgBW9tf10wI",
+    authDomain: "anzio-scoreboard.firebaseapp.com",
+    databaseURL: "https://anzio-scoreboard-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "anzio-scoreboard",
+    storageBucket: "anzio-scoreboard.firebasestorage.app",
+    messagingSenderId: "1070047467007",
+    appId: "1:1070047467007:web:eebd383f3f45f7943483ca",
+    measurementId: "G-HJB4DC7GN7"
+  };
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  const GAME_ID =
+    new URLSearchParams(location.search).get("game") ||
+    "anzio-scoreboard-3d8bb";
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
 
-    // reload remoto
-    const reloadRef = ref(db, '/overlayReload');
-    onValue(reloadRef, () => {
-      console.log("Reload remoto richiesto");
-      location.reload();
-    });
+  // reload remoto
+  const reloadRef = ref(db, "/overlayReload");
+  onValue(reloadRef, () => {
+    console.log("Reload remoto richiesto");
+    location.reload();
+  });
 
-    const stateRef = ref(db, `games/${GAME_ID}/state`);
+  const stateRef = ref(db, `games/${GAME_ID}/state`);
 
-    const $ = sel => document.querySelector(sel);
-    const els = {
-      // nomi
-      abbrA: $('#abbrA'), fullA: $('#fullA'),
-      abbrB: $('#abbrB'), fullB: $('#fullB'),
-      // loghi
-      logoA: $('#logoA'), logoB: $('#logoB'),
-      // punteggi / statistiche
-      scoreA: $('#scoreA'), scoreB: $('#scoreB'),
-      foulsA: $('#foulsA'), foulsB: $('#foulsB'),
-      bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
-      // centro
-      period: $('#period'), timeouts: $('#timeouts'),
-      gameClock: $('#gameClock'), shotClock: $('#shotClock'),
-      possLeft: $('#possLeft'), possRight: $('#possRight')
-    };
+  const $ = sel => document.querySelector(sel);
+  const els = {
+    // nomi
+    abbrA: $('#abbrA'), fullA: $('#fullA'),
+    abbrB: $('#abbrB'), fullB: $('#fullB'),
+    // loghi
+    logoA: $('#logoA'), logoB: $('#logoB'),
+    // punteggi / statistiche
+    scoreA: $('#scoreA'), scoreB: $('#scoreB'),
+    foulsA: $('#foulsA'), foulsB: $('#foulsB'),
+    bonusAwrap: $('#bonusAwrap'), bonusBwrap: $('#bonusBwrap'),
+    // centro
+    period: $('#period'), timeouts: $('#timeouts'),
+    gameClock: $('#gameClock'), shotClock: $('#shotClock'),
+    possLeft: $('#possLeft'), possRight: $('#possRight')
+  };
 
-    const state = {
-      nameA:'Home', nameB:'Away', logoA:'', logoB:'',
-      scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false,
-      period:1, timeouts:7, gameClockMS:12*60*1000, shotClock:24, poss:null
-    };
+  const state = {
+    nameA:'Home', nameB:'Away', logoA:'', logoB:'',
+    scoreA:0, scoreB:0, foulsA:0, foulsB:0, bonusA:false, bonusB:false,
+    period:1, timeouts:7, gameClockMS:12*60*1000, shotClock:24, poss:null
+  };
 
-    function fmtClock(ms){
-      const neg = ms<0;
-      const abs=Math.abs(ms);
-      const m=Math.floor(abs/60000);
-      const s=Math.floor((abs%60000)/1000);
-      const t=`${m}:${s.toString().padStart(2,'0')}`;
-      return neg ? `-${t}` : t;
+  function fmtClock(ms){
+    const neg = ms<0;
+    const abs=Math.abs(ms);
+    const m=Math.floor(abs/60000);
+    const s=Math.floor((abs%60000)/1000);
+    const t=`${m}:${s.toString().padStart(2,'0')}`;
+    return neg ? `-${t}` : t;
+  }
+
+  // abbreviazione automatica 3 lettere
+  function makeAbbr(name){
+    if(!name) return '';
+    const trimmed = String(name).trim();
+    if(!trimmed) return '';
+    const firstWord = trimmed.split(/\s+/)[0];
+    return firstWord.slice(0,3).toUpperCase();
+  }
+
+  function updatePossessionIndicators() {
+    const { possLeft, possRight } = els;
+    if (!possLeft || !possRight) return;
+
+    possLeft.classList.remove('on');
+    possRight.classList.remove('on');
+
+    if (state.poss === 'A') {
+      possLeft.classList.add('on');
+    } else if (state.poss === 'B') {
+      possRight.classList.add('on');
     }
+  }
 
-    // abbreviazione automatica 3 lettere
-    function makeAbbr(name){
-      if(!name) return '';
-      const trimmed = String(name).trim();
-      if(!trimmed) return '';
-      const firstWord = trimmed.split(/\s+/)[0];
-      return firstWord.slice(0,3).toUpperCase();
+  function updateCrunchTime(){
+    const el = els.shotClock;
+    if (!el) return;
+    const val = Number(state.shotClock);
+    if (!Number.isFinite(val)) {
+      el.classList.remove('crunch');
+      return;
     }
-
-    function updatePossessionIndicators() {
-      const { possLeft, possRight } = els;
-      if (!possLeft || !possRight) return;
-
-      possLeft.classList.remove('on');
-      possRight.classList.remove('on');
-
-      if (state.poss === 'A') {
-        possLeft.classList.add('on');
-      } else if (state.poss === 'B') {
-        possRight.classList.add('on');
-      }
+    if (val <= 5 && val >= 0) {
+      el.classList.add('crunch');
+    } else {
+      el.classList.remove('crunch');
     }
+  }
 
-    function updateCrunchTime(){
-      const el = els.shotClock;
-      if (!el) return;
-      const val = Number(state.shotClock);
-      if (!Number.isFinite(val)) {
-        el.classList.remove('crunch');
-        return;
-      }
-      if (val <= 5 && val >= 0) {
-        el.classList.add('crunch');
-      } else {
-        el.classList.remove('crunch');
-      }
-    }
+  function render(){
+    // nomi + abbreviazioni
+    els.fullA.textContent = state.nameA || '';
+    els.fullB.textContent = state.nameB || '';
+    els.abbrA.textContent = makeAbbr(state.nameA);
+    els.abbrB.textContent = makeAbbr(state.nameB);
 
-    function render(){
-      // nomi + abbreviazioni
-      els.fullA.textContent = state.nameA || '';
-      els.fullB.textContent = state.nameB || '';
-      els.abbrA.textContent = makeAbbr(state.nameA);
-      els.abbrB.textContent = makeAbbr(state.nameB);
+    // punteggi / falli / bonus
+    els.scoreA.textContent = state.scoreA;
+    els.scoreB.textContent = state.scoreB;
+    els.foulsA.textContent = state.foulsA;
+    els.foulsB.textContent = state.foulsB;
+    els.period.textContent = state.period;
+    els.timeouts.textContent = state.timeouts;
+    els.shotClock.textContent = state.shotClock;
 
-      // punteggi / falli / bonus
-      els.scoreA.textContent = state.scoreA;
-      els.scoreB.textContent = state.scoreB;
-      els.foulsA.textContent = state.foulsA;
-      els.foulsB.textContent = state.foulsB;
-      els.period.textContent = state.period;
-      els.timeouts.textContent = state.timeouts;
-      els.shotClock.textContent = state.shotClock;
+    els.logoA.src = state.logoA || '';
+    els.logoB.src = state.logoB || '';
 
-      els.logoA.src = state.logoA || '';
-      els.logoB.src = state.logoB || '';
+    if(els.bonusAwrap) els.bonusAwrap.style.opacity = state.bonusA ? 1 : .25;
+    if(els.bonusBwrap) els.bonusBwrap.style.opacity = state.bonusB ? 1 : .25;
 
-      if(els.bonusAwrap) els.bonusAwrap.style.opacity = state.bonusA ? 1 : .25;
-      if(els.bonusBwrap) els.bonusBwrap.style.opacity = state.bonusB ? 1 : .25;
+    els.gameClock.textContent = fmtClock(state.gameClockMS);
 
-      els.gameClock.textContent = fmtClock(state.gameClockMS);
+    updatePossessionIndicators();
+    updateCrunchTime();
+  }
 
-      updatePossessionIndicators();
-      updateCrunchTime();
-    }
+  render();
 
+  onValue(stateRef, (snap)=>{
+    const v = snap.val();
+    if(!v) return;
+    Object.assign(state, v);
     render();
+  });
+</script>
 
-    onValue(stateRef, (snap)=>{
-      const v = snap.val();
-      if(!v) return;
-      Object.assign(state, v);
-      render();
-    });
-  </script>
 </body>
 </html>
