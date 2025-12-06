@@ -67,6 +67,8 @@ h2{
 input[type="text"],
 input[type="number"],
 input[type="time"],
+input[type="email"],
+input[type="password"],
 select{
   background:#0e1420;
   border:1px solid rgba(255,255,255,.1);
@@ -304,228 +306,256 @@ button:active{ transform:translateY(1px); }
 
 <div class="wrap">
 
-<!-- MINI PREVIEW -->
-<div class="card" id="miniPreview">
-  <div id="miniLeft">
-    <div class="tiny">C</div>
-    <div id="miniScoreA">0</div>
-    <div class="mini-chip" id="miniFoulsA">F:0</div>
-    <div class="mini-chip" id="miniBonusA">BONUS</div>
-  </div>
+  <!-- PANEL DI LOGIN -->
+  <section id="login-panel" class="card" style="max-width:420px;margin:40px auto;">
+    <h2>Login Controller</h2>
+    <p class="tiny">
+      Inserisci email e password dell'account autorizzato su Firebase per controllare il tabellone.
+    </p>
+    <form id="login-form" autocomplete="on">
+      <div class="row" style="flex-direction:column;align-items:stretch;">
+        <label class="tiny">Email</label>
+        <input id="login-email" type="email" required placeholder="controller@example.com" />
+      </div>
+      <div class="row" style="flex-direction:column;align-items:stretch;">
+        <label class="tiny">Password</label>
+        <input id="login-password" type="password" required placeholder="••••••••" />
+      </div>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:8px;">
+        <button type="submit" class="btn-accent" style="flex:1;">Entra</button>
+      </div>
+      <p id="login-error" class="tiny" style="color:var(--danger);margin-top:8px;"></p>
+    </form>
+  </section>
 
-  <div id="miniCenter">
-    <div id="miniClock">12:00</div>
-    <div id="miniShot">24</div>
-    <div class="mini-chip">P <span id="miniPeriod">1</span></div>
-  </div>
+  <!-- CONTROLLER: visibile solo dopo login -->
+  <section id="controller-panel" style="display:none;">
 
-  <div id="miniRight">
-    <div class="tiny">O</div>
-    <div id="miniScoreB">0</div>
-    <div class="mini-chip" id="miniFoulsB">F:0</div>
-    <div class="mini-chip" id="miniBonusB">BONUS</div>
-  </div>
-</div>
-
-<!-- CLOCK + SCORES -->
-<div class="top-row">
-
-  <!-- GAME CLOCK & SHOT CLOCK -->
-  <div class="card clock-card">
-    <h2>Game Clock & Shot Clock</h2>
-
-    <div class="clock-block">
-
-      <!-- LEFT SIDE -->
-      <div style="display:flex; flex-direction:column; gap:10px;">
-
-        <div class="row">
-          <button id="clkStart" class="btn-accent">Start</button>
-          <button id="clkStop">Stop</button>
-        </div>
-
-        <div class="row">
-          <input type="text" id="clkSet" placeholder="mm:ss" style="width:120px" />
-          <button id="clkApply">Apply</button>
-        </div>
-
-        <div class="row">
-          <select id="clkPreset">
-            <option value="720000">12:00</option>
-            <option value="600000">10:00</option>
-            <option value="480000">08:00</option>
-            <option value="360000">06:00</option>
-          </select>
-          <button id="clkPresetApply">Reset</button>
-        </div>
-
-        <div class="row">
-          <button id="shotReset">Shot 24</button>
-          <button id="shotDisable" class="btn-danger">Shot OFF</button>
-        </div>
-
-        <div class="row">
-          <input type="number" id="shotSet" min="1" max="99" value="24" style="width:80px" />
-          <button id="shotApply">Apply</button>
-        </div>
-
+    <!-- MINI PREVIEW -->
+    <div class="card" id="miniPreview">
+      <div id="miniLeft">
+        <div class="tiny">C</div>
+        <div id="miniScoreA">0</div>
+        <div class="mini-chip" id="miniFoulsA">F:0</div>
+        <div class="mini-chip" id="miniBonusA">BONUS</div>
       </div>
 
-      <!-- NUMPAD -->
-      <div id="numpad">
-        <button data-num="1">1</button>
-        <button data-num="2">2</button>
-        <button data-num="3">3</button>
-        <button data-num="4">4</button>
-        <button data-num="5">5</button>
-        <button data-num="6">6</button>
-        <button data-num="7">7</button>
-        <button data-num="8">8</button>
-        <button data-num="9">9</button>
-        <button style="visibility:hidden;"></button>
-        <button data-num="0">0</button>
-        <button id="numpadClear" class="btn-danger">C</button>
+      <div id="miniCenter">
+        <div id="miniClock">12:00</div>
+        <div id="miniShot">24</div>
+        <div class="mini-chip">P <span id="miniPeriod">1</span></div>
       </div>
 
+      <div id="miniRight">
+        <div class="tiny">O</div>
+        <div id="miniScoreB">0</div>
+        <div class="mini-chip" id="miniFoulsB">F:0</div>
+        <div class="mini-chip" id="miniBonusB">BONUS</div>
+      </div>
     </div>
 
-    <div class="tiny">
-      Shortcuts: Space = Start/Stop · R = Shot 24 · F = Shot disabled · +/- = Shot ±1
-    </div>
-  </div>
+    <!-- CLOCK + SCORES -->
+    <div class="top-row">
 
-  <!-- SCORES -->
-  <div class="card">
-    <h2>Scores</h2>
+      <!-- GAME CLOCK & SHOT CLOCK -->
+      <div class="card clock-card">
+        <h2>Game Clock & Shot Clock</h2>
 
-    <div class="score-vert">
+        <div class="clock-block">
 
-      <!-- HOME -->
-      <div class="score-team">
-        <div><strong>Home</strong></div>
-        <div class="btn-row">
-          <button data-delta="-1" data-target="A" class="btn-danger">-1</button>
-          <button data-delta="1"  data-target="A">+1</button>
-          <button data-delta="2"  data-target="A">+2</button>
-          <button data-delta="3"  data-target="A">+3</button>
+          <!-- LEFT SIDE -->
+          <div style="display:flex; flex-direction:column; gap:10px;">
+
+            <div class="row">
+              <button id="clkStart" class="btn-accent">Start</button>
+              <button id="clkStop">Stop</button>
+            </div>
+
+            <div class="row">
+              <input type="text" id="clkSet" placeholder="mm:ss" style="width:120px" />
+              <button id="clkApply">Apply</button>
+            </div>
+
+            <div class="row">
+              <select id="clkPreset">
+                <option value="720000">12:00</option>
+                <option value="600000">10:00</option>
+                <option value="480000">08:00</option>
+                <option value="360000">06:00</option>
+              </select>
+              <button id="clkPresetApply">Reset</button>
+            </div>
+
+            <div class="row">
+              <button id="shotReset">Shot 24</button>
+              <button id="shotDisable" class="btn-danger">Shot OFF</button>
+            </div>
+
+            <div class="row">
+              <input type="number" id="shotSet" min="1" max="99" value="24" style="width:80px" />
+              <button id="shotApply">Apply</button>
+            </div>
+
+          </div>
+
+          <!-- NUMPAD -->
+          <div id="numpad">
+            <button data-num="1">1</button>
+            <button data-num="2">2</button>
+            <button data-num="3">3</button>
+            <button data-num="4">4</button>
+            <button data-num="5">5</button>
+            <button data-num="6">6</button>
+            <button data-num="7">7</button>
+            <button data-num="8">8</button>
+            <button data-num="9">9</button>
+            <button style="visibility:hidden;"></button>
+            <button data-num="0">0</button>
+            <button id="numpadClear" class="btn-danger">C</button>
+          </div>
+
         </div>
-      </div>
 
-      <!-- AWAY -->
-      <div class="score-team">
-        <div><strong>Away</strong></div>
-        <div class="btn-row">
-          <button data-delta="-1" data-target="B" class="btn-danger">-1</button>
-          <button data-delta="1"  data-target="B">+1</button>
-          <button data-delta="2"  data-target="B">+2</button>
-          <button data-delta="3"  data-target="B">+3</button>
+        <div class="tiny">
+          Shortcuts: Space = Start/Stop · R = Shot 24 · F = Shot disabled · +/- = Shot ±1
         </div>
       </div>
 
-    </div>
+      <!-- SCORES -->
+      <div class="card">
+        <h2>Scores</h2>
 
-    <div class="row" style="justify-content:center; margin-top:10px;">
-      <button id="resetScores" class="btn-danger" style="min-width:200px;">Reset Scores</button>
-    </div>
-  </div>
+        <div class="score-vert">
 
-</div> <!-- fine .top-row -->
+          <!-- HOME -->
+          <div class="score-team">
+            <div><strong>Home</strong></div>
+            <div class="btn-row">
+              <button data-delta="-1" data-target="A" class="btn-danger">-1</button>
+              <button data-delta="1"  data-target="A">+1</button>
+              <button data-delta="2"  data-target="A">+2</button>
+              <button data-delta="3"  data-target="A">+3</button>
+            </div>
+          </div>
+
+          <!-- AWAY -->
+          <div class="score-team">
+            <div><strong>Away</strong></div>
+            <div class="btn-row">
+              <button data-delta="-1" data-target="B" class="btn-danger">-1</button>
+              <button data-delta="1"  data-target="B">+1</button>
+              <button data-delta="2"  data-target="B">+2</button>
+              <button data-delta="3"  data-target="B">+3</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row" style="justify-content:center; margin-top:10px;">
+          <button id="resetScores" class="btn-danger" style="min-width:200px;">Reset Scores</button>
+        </div>
+      </div>
+
+    </div> <!-- fine .top-row -->
 
 
-<!-- PERIOD & TIMEOUTS -->
-<div class="card">
-  <h2>Period & Timeouts</h2>
+    <!-- PERIOD & TIMEOUTS -->
+    <div class="card">
+      <h2>Period & Timeouts</h2>
 
-  <div class="row">
-    <button id="perDec">Period -</button>
-    <span class="tiny">Current: <strong id="periodView">1</strong></span>
-    <button id="perInc">Period +</button>
-  </div>
-
-  <div class="row">
-    <button id="toDec">TO -</button>
-    <span class="tiny">Current: <strong id="timeoutsView">7</strong></span>
-    <button id="toInc">TO +</button>
-  </div>
-</div>
-
-<!-- FOULS & BONUS -->
-<div class="card">
-  <h2>Fouls & Bonus</h2>
-
-  <div class="grid-2">
-
-    <div>
       <div class="row">
-        <span class="tiny">Home Fouls: <strong id="foulsAView">0</strong></span>
+        <button id="perDec">Period -</button>
+        <span class="tiny">Current: <strong id="periodView">1</strong></span>
+        <button id="perInc">Period +</button>
       </div>
+
       <div class="row">
-        <button data-foul="A" data-delta="-1" class="btn-danger">-1</button>
-        <button data-foul="A" data-delta="1">+1</button>
-        <button id="bonusAToggle">Toggle Bonus</button>
+        <button id="toDec">TO -</button>
+        <span class="tiny">Current: <strong id="timeoutsView">7</strong></span>
+        <button id="toInc">TO +</button>
       </div>
     </div>
 
-    <div>
-      <div class="row">
-        <span class="tiny">Away Fouls: <strong id="foulsBView">0</strong></span>
+    <!-- FOULS & BONUS -->
+    <div class="card">
+      <h2>Fouls & Bonus</h2>
+
+      <div class="grid-2">
+
+        <div>
+          <div class="row">
+            <span class="tiny">Home Fouls: <strong id="foulsAView">0</strong></span>
+          </div>
+          <div class="row">
+            <button data-foul="A" data-delta="-1" class="btn-danger">-1</button>
+            <button data-foul="A" data-delta="1">+1</button>
+            <button id="bonusAToggle">Toggle Bonus</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="row">
+            <span class="tiny">Away Fouls: <strong id="foulsBView">0</strong></span>
+          </div>
+          <div class="row">
+            <button data-foul="B" data-delta="-1" class="btn-danger">-1</button>
+            <button data-foul="B" data-delta="1">+1</button>
+            <button id="bonusBToggle">Toggle Bonus</button>
+          </div>
+        </div>
+
       </div>
-      <div class="row">
-        <button data-foul="B" data-delta="-1" class="btn-danger">-1</button>
-        <button data-foul="B" data-delta="1">+1</button>
-        <button id="bonusBToggle">Toggle Bonus</button>
+
+      <div class="row" style="justify-content:center;">
+        <button id="resetFouls" class="btn-danger" style="min-width:200px;">Reset Fouls</button>
       </div>
     </div>
 
-  </div>
+    <!-- POSSESSION -->
+    <div class="card">
+      <h2>Possession Arrow</h2>
+      <div class="row">
+        <button id="possA">Home Possession</button>
+        <button id="possB">Away Possession</button>
+        <button id="possClear" class="btn-danger">Clear</button>
+      </div>
+    </div>
 
-  <div class="row" style="justify-content:center;">
-    <button id="resetFouls" class="btn-danger" style="min-width:200px;">Reset Fouls</button>
-  </div>
-</div>
+    <!-- TEAMS -->
+    <div class="card">
+      <h2>Teams</h2>
 
-<!-- POSSESSION -->
-<div class="card">
-  <h2>Possession Arrow</h2>
-  <div class="row">
-    <button id="possA">Home Possession</button>
-    <button id="possB">Away Possession</button>
-    <button id="possClear" class="btn-danger">Clear</button>
-  </div>
-</div>
+      <div class="row">
+        <input type="text" id="inNameA" placeholder="Home team name" />
+        <input type="file" id="inLogoA" accept="image/*" />
+      </div>
 
-<!-- TEAMS -->
-<div class="card">
-  <h2>Teams</h2>
+      <div class="row">
+        <input type="text" id="inNameB" placeholder="Away team name" />
+        <input type="file" id="inLogoB" accept="image/*" />
+      </div>
 
-  <div class="row">
-    <input type="text" id="inNameA" placeholder="Home team name" />
-    <input type="file" id="inLogoA" accept="image/*" />
-  </div>
+      <div class="row">
+        <button id="swapTeams">Swap Sides</button>
+        <button id="resetLogos">Clear Logos</button>
+      </div>
+    </div>
 
-  <div class="row">
-    <input type="text" id="inNameB" placeholder="Away team name" />
-    <input type="file" id="inLogoB" accept="image/*" />
-  </div>
+    <!-- UTILITIES -->
+    <div class="card">
+      <h2>Utilities</h2>
 
-  <div class="row">
-    <button id="swapTeams">Swap Sides</button>
-    <button id="resetLogos">Clear Logos</button>
-  </div>
-</div>
+      <div class="row">
+        <button id="saveState">Save State</button>
+        <button id="loadState">Load State</button>
+        <button id="forceSync" class="btn-accent">Force Sync</button>
+        <button id="resetAll" class="btn-danger">Reset All</button>
+        <button id="forceReload" class="btn-accent">Forza Refresh Overlay</button>
+        <button id="logout-btn" class="btn-danger">Logout</button>
+      </div>
+    </div>
 
-<!-- UTILITIES -->
-<div class="card">
-  <h2>Utilities</h2>
-
-  <div class="row">
-    <button id="saveState">Save State</button>
-    <button id="loadState">Load State</button>
-    <button id="forceSync" class="btn-accent">Force Sync</button>
-    <button id="resetAll" class="btn-danger">Reset All</button>
-    <button id="forceReload" class="btn-accent">Forza Refresh Overlay</button>
-  </div>
-</div>
+  </section> <!-- fine controller-panel -->
 
 </div> <!-- end .wrap -->
 
@@ -541,6 +571,12 @@ import {
   serverTimestamp,
   onDisconnect
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* CONFIG */
 const firebaseConfig = {
@@ -560,450 +596,509 @@ const GAME_ID =
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-const stateRef = ref(db, `games/${GAME_ID}/state`);
-const metaRef  = ref(db, `games/${GAME_ID}/meta`);
+/* LOGIN DOM */
+const loginPanel      = document.getElementById("login-panel");
+const controllerPanel = document.getElementById("controller-panel");
+const loginForm       = document.getElementById("login-form");
+const loginEmail      = document.getElementById("login-email");
+const loginPassword   = document.getElementById("login-password");
+const loginError      = document.getElementById("login-error");
+const logoutBtn       = document.getElementById("logout-btn");
 
-/* DOM HELPER */
+/* UTIL DOM HELPER */
 const $ = sel => document.querySelector(sel);
 
-/* STATE */
-const state = {
-  nameA: "Home",
-  nameB: "Away",
-  logoA: "",
-  logoB: "",
-
-  scoreA: 0,
-  scoreB: 0,
-
-  foulsA: 0,
-  foulsB: 0,
-
-  bonusA: false,
-  bonusB: false,
-
-  period: 1,
-  timeouts: 7,
-
-  gameClockMS: 12 * 60 * 1000,
-  gameRunning: false,
-
-  shotClock: 24,
-  shotEnabled: true,
-
-  poss: null
-};
-
-/* ELEMENTS */
-const c = {
-
-  /* mini preview */
-  miniScoreA: $('#miniScoreA'),
-  miniScoreB: $('#miniScoreB'),
-  miniFoulsA: $('#miniFoulsA'),
-  miniFoulsB: $('#miniFoulsB'),
-  miniBonusA: $('#miniBonusA'),
-  miniBonusB: $('#miniBonusB'),
-  miniClock:  $('#miniClock'),
-  miniShot:   $('#miniShot'),
-  miniPeriod: $('#miniPeriod'),
-
-  /* clock */
-  clkStart: $('#clkStart'),
-  clkStop:  $('#clkStop'),
-  clkSet:   $('#clkSet'),
-  clkApply: $('#clkApply'),
-  clkPreset: $('#clkPreset'),
-  clkPresetApply: $('#clkPresetApply'),
-
-  /* shot */
-  shotReset: $('#shotReset'),
-  shotSet: $('#shotSet'),
-  shotApply: $('#shotApply'),
-  shotDisable: $('#shotDisable'),
-
-  /* numpad */
-  numpad: $('#numpad'),
-  numpadClear: $('#numpadClear'),
-
-  /* scores */
-  resetScores: $('#resetScores'),
-
-  /* period & timeouts */
-  periodView: $('#periodView'),
-  timeoutsView: $('#timeoutsView'),
-  perDec: $('#perDec'),
-  perInc: $('#perInc'),
-  toDec:  $('#toDec'),
-  toInc:  $('#toInc'),
-
-  /* fouls */
-  foulsAView: $('#foulsAView'),
-  foulsBView: $('#foulsBView'),
-  resetFouls: $('#resetFouls'),
-  bonusAToggle: $('#bonusAToggle'),
-  bonusBToggle: $('#bonusBToggle'),
-
-  /* possession */
-  possA: $('#possA'),
-  possB: $('#possB'),
-  possClear: $('#possClear'),
-
-  /* teams */
-  inNameA: $('#inNameA'),
-  inNameB: $('#inNameB'),
-  inLogoA: $('#inLogoA'),
-  inLogoB: $('#inLogoB'),
-  swapTeams: $('#swapTeams'),
-  resetLogos: $('#resetLogos'),
-
-  /* utilities */
-  saveState: $('#saveState'),
-  loadState: $('#loadState'),
-  forceSync: $('#forceSync'),
-  resetAll: $('#resetAll'),
-  forceReload: $('#forceReload')
-};
-
-/* PREVIEW */
-function fmt(ms) {
-  const m = Math.floor(ms / 60000);
-  const s = Math.floor((ms % 60000) / 1000);
-  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-
-function renderPreview() {
-  c.miniScoreA.textContent = state.scoreA;
-  c.miniScoreB.textContent = state.scoreB;
-
-  c.miniFoulsA.textContent = "F:" + state.foulsA;
-  c.miniFoulsB.textContent = "F:" + state.foulsB;
-
-  c.miniBonusA.classList.toggle("mini-active", state.bonusA);
-  c.miniBonusB.classList.toggle("mini-active", state.bonusB);
-
-  c.miniClock.textContent = fmt(state.gameClockMS);
-  c.miniShot.textContent = state.shotEnabled ? state.shotClock : "--";
-
-  c.miniPeriod.textContent = state.period;
-}
-
-/* PUSH FIREBASE */
-let dirty = true;
-
-const pushNow = () => {
-  update(stateRef, { ...state }).then(() => {
-    update(metaRef, { updatedAt: serverTimestamp() });
-  });
-  dirty = false;
-};
-
-setInterval(() => {
-  if (dirty) pushNow();
-}, 200);
-
-function markDirty() {
-  dirty = true;
-}
-
-/* CLOCK ENGINE */
-let lastTick = 0;
-let lastShotTick = 0;
-let rafId = null;
-
-function tick(ts) {
-  if (!lastTick) lastTick = ts;
-  if (!lastShotTick) lastShotTick = ts;
-
-  const dt = ts - lastTick;
-  lastTick = ts;
-
-  if (state.gameRunning) {
-    state.gameClockMS = Math.max(0, state.gameClockMS - dt);
-
-    if (state.shotEnabled && ts - lastShotTick >= 1000) {
-      state.shotClock = Math.max(0, state.shotClock - 1);
-      lastShotTick = ts;
+/* LOGIN HANDLER */
+if (loginForm) {
+  loginForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    loginError.textContent = "";
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        (loginEmail.value || "").trim(),
+        loginPassword.value
+      );
+      // se va a buon fine, onAuthStateChanged si occupa del resto
+    } catch (err) {
+      console.error(err);
+      loginError.textContent =
+        "Login non riuscito: " + (err.code || err.message || "controlla credenziali");
     }
-
-    markDirty();
-    renderPreview();
-  }
-
-  rafId = requestAnimationFrame(tick);
+  });
 }
-rafId = requestAnimationFrame(tick);
 
-/* CLOCK BUTTONS */
-c.clkStart.addEventListener("click", () => {
-  state.gameRunning = true;
-  lastTick = 0;
-  lastShotTick = 0;
-  markDirty();
-});
+/* LOGOUT */
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    signOut(auth);
+  });
+}
 
-c.clkStop.addEventListener("click", () => {
-  state.gameRunning = false;
-  markDirty();
-});
+/* INIZIALIZZAZIONE CONTROLLER UNA SOLA VOLTA */
+let controllerInitialized = false;
 
-c.clkApply.addEventListener("click", () => {
-  const m = /^([0-9]{1,2}):([0-5][0-9])$/.exec(c.clkSet.value.trim());
-  if (!m) return;
-  state.gameClockMS = (+m[1] * 60 + +m[2]) * 1000;
-  markDirty();
-  renderPreview();
-});
+onAuthStateChanged(auth, user => {
+  if (user) {
+    loginPanel.style.display = "none";
+    controllerPanel.style.display = "block";
 
-c.clkPresetApply.addEventListener("click", () => {
-  state.gameClockMS = parseInt(c.clkPreset.value);
-  markDirty();
-  renderPreview();
-});
-
-/* SHOT CLOCK */
-c.shotReset.addEventListener("click", () => {
-  if (state.shotEnabled) state.shotClock = 24;
-  markDirty();
-  renderPreview();
-});
-
-c.shotApply.addEventListener("click", () => {
-  const v = Math.max(1, Math.min(99, +c.shotSet.value || 24));
-  state.shotClock = v;
-  markDirty();
-  renderPreview();
-});
-
-c.shotDisable.addEventListener("click", () => {
-  state.shotEnabled = !state.shotEnabled;
-  c.shotDisable.textContent = state.shotEnabled ? "Shot OFF" : "Shot ON";
-  markDirty();
-  renderPreview();
-});
-
-/* NUMPAD */
-c.numpad.addEventListener("click", e => {
-  const btn = e.target.closest("button[data-num]");
-  if (!btn) return;
-
-  let current = c.clkSet.value.replace(":", "");
-  if (current.length >= 4) current = "";
-
-  current += btn.dataset.num;
-
-  if (current.length <= 2) {
-    c.clkSet.value = current.padStart(1, "0");
+    if (!controllerInitialized) {
+      controllerInitialized = true;
+      initController(user);
+    }
   } else {
-    let m = current.slice(0, -2);
-    let s = current.slice(-2);
-    c.clkSet.value = `${m}:${s}`;
+    controllerPanel.style.display = "none";
+    loginPanel.style.display = "block";
   }
 });
 
-c.numpadClear.addEventListener("click", () => {
-  c.clkSet.value = "";
-});
+/* CONTROLLER LOGIC */
+function initController(user) {
+  const stateRef = ref(db, `games/${GAME_ID}/state`);
+  const metaRef  = ref(db, `games/${GAME_ID}/meta`);
 
-/* SCORES */
-document.addEventListener("click", e => {
-  const btn = e.target.closest("button[data-delta][data-target]");
-  if (!btn) return;
-
-  const delta = +btn.dataset.delta;
-  const key = btn.dataset.target === "A" ? "scoreA" : "scoreB";
-
-  state[key] = Math.max(0, state[key] + delta);
-  markDirty();
-  renderPreview();
-});
-
-c.resetScores.addEventListener("click", () => {
-  state.scoreA = 0;
-  state.scoreB = 0;
-  markDirty();
-  renderPreview();
-});
-
-/* FOULS & BONUS */
-document.addEventListener("click", e => {
-  const btn = e.target.closest("button[data-foul]");
-  if (!btn) return;
-
-  const delta = +btn.dataset.delta;
-  const key = btn.dataset.foul === "A" ? "foulsA" : "foulsB";
-
-  state[key] = Math.max(0, state[key] + delta);
-  markDirty();
-  renderPreview();
-});
-
-c.resetFouls.addEventListener("click", () => {
-  state.foulsA = 0;
-  state.foulsB = 0;
-  state.bonusA = false;
-  state.bonusB = false;
-  markDirty();
-  renderPreview();
-});
-
-c.bonusAToggle.addEventListener("click", () => {
-  state.bonusA = !state.bonusA;
-  markDirty();
-  renderPreview();
-});
-
-c.bonusBToggle.addEventListener("click", () => {
-  state.bonusB = !state.bonusB;
-  markDirty();
-  renderPreview();
-});
-
-/* PERIOD & TIMEOUTS */
-c.perDec.addEventListener("click", () => {
-  state.period = Math.max(1, state.period - 1);
-  markDirty();
-  renderPreview();
-  c.periodView.textContent = state.period;
-});
-c.perInc.addEventListener("click", () => {
-  state.period = Math.min(9, state.period + 1);
-  markDirty();
-  renderPreview();
-  c.periodView.textContent = state.period;
-});
-
-c.toDec.addEventListener("click", () => {
-  state.timeouts = Math.max(0, state.timeouts - 1);
-  markDirty();
-  c.timeoutsView.textContent = state.timeouts;
-});
-c.toInc.addEventListener("click", () => {
-  state.timeouts = Math.min(10, state.timeouts + 1);
-  markDirty();
-  c.timeoutsView.textContent = state.timeouts;
-});
-
-/* POSSESSION */
-c.possA.addEventListener("click", () => {
-  state.poss = "A";
-  markDirty();
-});
-c.possB.addEventListener("click", () => {
-  state.poss = "B";
-  markDirty();
-});
-c.possClear.addEventListener("click", () => {
-  state.poss = null;
-  markDirty();
-});
-
-/* TEAMS */
-c.inNameA.addEventListener("input", e => {
-  state.nameA = e.target.value || "Home";
-  markDirty();
-});
-
-c.inNameB.addEventListener("input", e => {
-  state.nameB = e.target.value || "Away";
-  markDirty();
-});
-
-function loadLogo(file, key) {
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = () => {
-    state[key] = r.result;
-    markDirty();
-  };
-  r.readAsDataURL(file);
-}
-
-c.inLogoA.addEventListener("change", e => loadLogo(e.target.files[0], "logoA"));
-c.inLogoB.addEventListener("change", e => loadLogo(e.target.files[0], "logoB"));
-
-c.swapTeams.addEventListener("click", () => {
-  [state.nameA, state.nameB] = [state.nameB, state.nameA];
-  [state.logoA, state.logoB] = [state.logoB, state.logoA];
-  [state.scoreA, state.scoreB] = [state.scoreB, state.scoreA];
-  [state.foulsA, state.foulsB] = [state.foulsB, state.foulsA];
-  state.poss = state.poss === "A" ? "B" :
-               state.poss === "B" ? "A" : null;
-
-  markDirty();
-  renderPreview();
-});
-
-c.resetLogos.addEventListener("click", () => {
-  state.logoA = "";
-  state.logoB = "";
-  markDirty();
-});
-
-/* UTILITIES */
-c.saveState.addEventListener("click", () => {
-  localStorage.setItem("pro-scoreboard", JSON.stringify(state));
-  alert("Saved locally");
-});
-
-c.loadState.addEventListener("click", () => {
-  try {
-    const data = JSON.parse(localStorage.getItem("pro-scoreboard") || "{}");
-    Object.assign(state, data);
-    markDirty();
-    renderPreview();
-  } catch (e) {}
-});
-
-c.forceSync.addEventListener("click", () => {
-  dirty = true;
-  pushNow();
-  alert("Forced sync sent!");
-});
-
-c.resetAll.addEventListener("click", () => {
-  Object.assign(state, {
+  /* STATE */
+  const state = {
     nameA: "Home",
     nameB: "Away",
     logoA: "",
     logoB: "",
+
     scoreA: 0,
     scoreB: 0,
+
     foulsA: 0,
     foulsB: 0,
+
     bonusA: false,
     bonusB: false,
+
     period: 1,
     timeouts: 7,
+
     gameClockMS: 12 * 60 * 1000,
     gameRunning: false,
+
     shotClock: 24,
     shotEnabled: true,
+
     poss: null
+  };
+
+  /* ELEMENTS */
+  const c = {
+
+    /* mini preview */
+    miniScoreA: $('#miniScoreA'),
+    miniScoreB: $('#miniScoreB'),
+    miniFoulsA: $('#miniFoulsA'),
+    miniFoulsB: $('#miniFoulsB'),
+    miniBonusA: $('#miniBonusA'),
+    miniBonusB: $('#miniBonusB'),
+    miniClock:  $('#miniClock'),
+    miniShot:   $('#miniShot'),
+    miniPeriod: $('#miniPeriod'),
+
+    /* clock */
+    clkStart: $('#clkStart'),
+    clkStop:  $('#clkStop'),
+    clkSet:   $('#clkSet'),
+    clkApply: $('#clkApply'),
+    clkPreset: $('#clkPreset'),
+    clkPresetApply: $('#clkPresetApply'),
+
+    /* shot */
+    shotReset: $('#shotReset'),
+    shotSet: $('#shotSet'),
+    shotApply: $('#shotApply'),
+    shotDisable: $('#shotDisable'),
+
+    /* numpad */
+    numpad: $('#numpad'),
+    numpadClear: $('#numpadClear'),
+
+    /* scores */
+    resetScores: $('#resetScores'),
+
+    /* period & timeouts */
+    periodView: $('#periodView'),
+    timeoutsView: $('#timeoutsView'),
+    perDec: $('#perDec'),
+    perInc: $('#perInc'),
+    toDec:  $('#toDec'),
+    toInc:  $('#toInc'),
+
+    /* fouls */
+    foulsAView: $('#foulsAView'),
+    foulsBView: $('#foulsBView'),
+    resetFouls: $('#resetFouls'),
+    bonusAToggle: $('#bonusAToggle'),
+    bonusBToggle: $('#bonusBToggle'),
+
+    /* possession */
+    possA: $('#possA'),
+    possB: $('#possB'),
+    possClear: $('#possClear'),
+
+    /* teams */
+    inNameA: $('#inNameA'),
+    inNameB: $('#inNameB'),
+    inLogoA: $('#inLogoA'),
+    inLogoB: $('#inLogoB'),
+    swapTeams: $('#swapTeams'),
+    resetLogos: $('#resetLogos'),
+
+    /* utilities */
+    saveState: $('#saveState'),
+    loadState: $('#loadState'),
+    forceSync: $('#forceSync'),
+    resetAll: $('#resetAll'),
+    forceReload: $('#forceReload')
+  };
+
+  /* PREVIEW */
+  function fmt(ms) {
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderPreview() {
+    c.miniScoreA.textContent = state.scoreA;
+    c.miniScoreB.textContent = state.scoreB;
+
+    c.miniFoulsA.textContent = "F:" + state.foulsA;
+    c.miniFoulsB.textContent = "F:" + state.foulsB;
+
+    c.miniBonusA.classList.toggle("mini-active", state.bonusA);
+    c.miniBonusB.classList.toggle("mini-active", state.bonusB);
+
+    c.miniClock.textContent = fmt(state.gameClockMS);
+    c.miniShot.textContent = state.shotEnabled ? state.shotClock : "--";
+
+    c.miniPeriod.textContent = state.period;
+  }
+
+  /* PUSH FIREBASE */
+  let dirty = true;
+
+  const pushNow = () => {
+    update(stateRef, { ...state }).then(() => {
+      update(metaRef, { updatedAt: serverTimestamp() });
+    });
+    dirty = false;
+  };
+
+  setInterval(() => {
+    if (dirty) pushNow();
+  }, 200);
+
+  function markDirty() {
+    dirty = true;
+  }
+
+  /* CLOCK ENGINE */
+  let lastTick = 0;
+  let lastShotTick = 0;
+  let rafId = null;
+
+  function tick(ts) {
+    if (!lastTick) lastTick = ts;
+    if (!lastShotTick) lastShotTick = ts;
+
+    const dt = ts - lastTick;
+    lastTick = ts;
+
+    if (state.gameRunning) {
+      state.gameClockMS = Math.max(0, state.gameClockMS - dt);
+
+      if (state.shotEnabled && ts - lastShotTick >= 1000) {
+        state.shotClock = Math.max(0, state.shotClock - 1);
+        lastShotTick = ts;
+      }
+
+      markDirty();
+      renderPreview();
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+
+  /* CLOCK BUTTONS */
+  c.clkStart.addEventListener("click", () => {
+    state.gameRunning = true;
+    lastTick = 0;
+    lastShotTick = 0;
+    markDirty();
   });
 
-  markDirty();
+  c.clkStop.addEventListener("click", () => {
+    state.gameRunning = false;
+    markDirty();
+  });
+
+  c.clkApply.addEventListener("click", () => {
+    const m = /^([0-9]{1,2}):([0-5][0-9])$/.exec(c.clkSet.value.trim());
+    if (!m) return;
+    state.gameClockMS = (+m[1] * 60 + +m[2]) * 1000;
+    markDirty();
+    renderPreview();
+  });
+
+  c.clkPresetApply.addEventListener("click", () => {
+    state.gameClockMS = parseInt(c.clkPreset.value);
+    markDirty();
+    renderPreview();
+  });
+
+  /* SHOT CLOCK */
+  c.shotReset.addEventListener("click", () => {
+    if (state.shotEnabled) state.shotClock = 24;
+    markDirty();
+    renderPreview();
+  });
+
+  c.shotApply.addEventListener("click", () => {
+    const v = Math.max(1, Math.min(99, +c.shotSet.value || 24));
+    state.shotClock = v;
+    markDirty();
+    renderPreview();
+  });
+
+  c.shotDisable.addEventListener("click", () => {
+    state.shotEnabled = !state.shotEnabled;
+    c.shotDisable.textContent = state.shotEnabled ? "Shot OFF" : "Shot ON";
+    markDirty();
+    renderPreview();
+  });
+
+  /* NUMPAD */
+  c.numpad.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-num]");
+    if (!btn) return;
+
+    let current = c.clkSet.value.replace(":", "");
+    if (current.length >= 4) current = "";
+
+    current += btn.dataset.num;
+
+    if (current.length <= 2) {
+      c.clkSet.value = current.padStart(1, "0");
+    } else {
+      let m = current.slice(0, -2);
+      let s = current.slice(-2);
+      c.clkSet.value = `${m}:${s}`;
+    }
+  });
+
+  c.numpadClear.addEventListener("click", () => {
+    c.clkSet.value = "";
+  });
+
+  /* SCORES */
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-delta][data-target]");
+    if (!btn) return;
+
+    const delta = +btn.dataset.delta;
+    const key = btn.dataset.target === "A" ? "scoreA" : "scoreB";
+
+    state[key] = Math.max(0, state[key] + delta);
+    markDirty();
+    renderPreview();
+  });
+
+  c.resetScores.addEventListener("click", () => {
+    state.scoreA = 0;
+    state.scoreB = 0;
+    markDirty();
+    renderPreview();
+  });
+
+  /* FOULS & BONUS */
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-foul]");
+    if (!btn) return;
+
+    const delta = +btn.dataset.delta;
+    const key = btn.dataset.foul === "A" ? "foulsA" : "foulsB";
+
+    state[key] = Math.max(0, state[key] + delta);
+    markDirty();
+    renderPreview();
+  });
+
+  c.resetFouls.addEventListener("click", () => {
+    state.foulsA = 0;
+    state.foulsB = 0;
+    state.bonusA = false;
+    state.bonusB = false;
+    markDirty();
+    renderPreview();
+  });
+
+  c.bonusAToggle.addEventListener("click", () => {
+    state.bonusA = !state.bonusA;
+    markDirty();
+    renderPreview();
+  });
+
+  c.bonusBToggle.addEventListener("click", () => {
+    state.bonusB = !state.bonusB;
+    markDirty();
+    renderPreview();
+  });
+
+  /* PERIOD & TIMEOUTS */
+  c.perDec.addEventListener("click", () => {
+    state.period = Math.max(1, state.period - 1);
+    markDirty();
+    renderPreview();
+    c.periodView.textContent = state.period;
+  });
+  c.perInc.addEventListener("click", () => {
+    state.period = Math.min(9, state.period + 1);
+    markDirty();
+    renderPreview();
+    c.periodView.textContent = state.period;
+  });
+
+  c.toDec.addEventListener("click", () => {
+    state.timeouts = Math.max(0, state.timeouts - 1);
+    markDirty();
+    c.timeoutsView.textContent = state.timeouts;
+  });
+  c.toInc.addEventListener("click", () => {
+    state.timeouts = Math.min(10, state.timeouts + 1);
+    markDirty();
+    c.timeoutsView.textContent = state.timeouts;
+  });
+
+  /* POSSESSION */
+  c.possA.addEventListener("click", () => {
+    state.poss = "A";
+    markDirty();
+  });
+  c.possB.addEventListener("click", () => {
+    state.poss = "B";
+    markDirty();
+  });
+  c.possClear.addEventListener("click", () => {
+    state.poss = null;
+    markDirty();
+  });
+
+  /* TEAMS */
+  c.inNameA.addEventListener("input", e => {
+    state.nameA = e.target.value || "Home";
+    markDirty();
+  });
+
+  c.inNameB.addEventListener("input", e => {
+    state.nameB = e.target.value || "Away";
+    markDirty();
+  });
+
+  function loadLogo(file, key) {
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      state[key] = r.result;
+      markDirty();
+    };
+    r.readAsDataURL(file);
+  }
+
+  c.inLogoA.addEventListener("change", e => loadLogo(e.target.files[0], "logoA"));
+  c.inLogoB.addEventListener("change", e => loadLogo(e.target.files[0], "logoB"));
+
+  c.swapTeams.addEventListener("click", () => {
+    [state.nameA, state.nameB] = [state.nameB, state.nameA];
+    [state.logoA, state.logoB] = [state.logoB, state.logoA];
+    [state.scoreA, state.scoreB] = [state.scoreB, state.scoreA];
+    [state.foulsA, state.foulsB] = [state.foulsB, state.foulsA];
+    state.poss = state.poss === "A" ? "B" :
+                 state.poss === "B" ? "A" : null;
+
+    markDirty();
+    renderPreview();
+  });
+
+  c.resetLogos.addEventListener("click", () => {
+    state.logoA = "";
+    state.logoB = "";
+    markDirty();
+  });
+
+  /* UTILITIES */
+  c.saveState.addEventListener("click", () => {
+    localStorage.setItem("pro-scoreboard", JSON.stringify(state));
+    alert("Saved locally");
+  });
+
+  c.loadState.addEventListener("click", () => {
+    try {
+      const data = JSON.parse(localStorage.getItem("pro-scoreboard") || "{}");
+      Object.assign(state, data);
+      markDirty();
+      renderPreview();
+    } catch (e) {}
+  });
+
+  c.forceSync.addEventListener("click", () => {
+    dirty = true;
+    pushNow();
+    alert("Forced sync sent!");
+  });
+
+  c.resetAll.addEventListener("click", () => {
+    Object.assign(state, {
+      nameA: "Home",
+      nameB: "Away",
+      logoA: "",
+      logoB: "",
+      scoreA: 0,
+      scoreB: 0,
+      foulsA: 0,
+      foulsB: 0,
+      bonusA: false,
+      bonusB: false,
+      period: 1,
+      timeouts: 7,
+      gameClockMS: 12 * 60 * 1000,
+      gameRunning: false,
+      shotClock: 24,
+      shotEnabled: true,
+      poss: null
+    });
+
+    markDirty();
+    renderPreview();
+  });
+
+  /* Forza Refresh Overlay */
+  c.forceReload.addEventListener("click", () => {
+    update(ref(db, "/overlayReload"), { nonce: Date.now() });
+    alert("Richiesta di refresh inviata all'overlay.");
+  });
+
+  /* CONTROLLER PRESENCE */
+  onDisconnect(metaRef).update({ controllerOnline:false });
+
+  update(metaRef, {
+    controllerOnline: true,
+    updatedAt: serverTimestamp(),
+    gameId: GAME_ID,
+    controllerUser: user.email || user.uid
+  });
+
   renderPreview();
-});
-
-/* Forza Refresh Overlay */
-c.forceReload.addEventListener("click", () => {
-  update(ref(db, "/overlayReload"), { nonce: Date.now() });
-  alert("Richiesta di refresh inviata all'overlay.");
-});
-
-/* CONTROLLER PRESENCE */
-onDisconnect(metaRef).update({ controllerOnline:false });
-
-update(metaRef, {
-  controllerOnline: true,
-  updatedAt: serverTimestamp(),
-  gameId: GAME_ID
-});
-
-renderPreview();
-pushNow();
+  pushNow();
+}
 </script>
 
 </body>
